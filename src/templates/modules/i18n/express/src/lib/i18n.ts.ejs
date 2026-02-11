@@ -1,0 +1,14 @@
+import i18next from "i18next";
+import en from "../locales/en.json" with { type: "json" };
+import fr from "../locales/fr.json" with { type: "json" };
+
+i18next.init({
+  lng: "en",
+  fallbackLng: "en",
+  resources: {
+    en: { translation: en },
+    fr: { translation: fr },
+  },
+});
+
+export default i18next;

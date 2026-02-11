@@ -1,0 +1,1 @@
+const fs=require("fs"),p=require("path"),B="C:/Users/Crevoisier/Desktop/cli/src/templates/modules";const d=JSON.parse(fs.readFileSync("C:/Users/Crevoisier/Desktop/cli/scripts/td.json","utf8"));for(const[k,v]of Object.entries(d)){const f=p.join(B,k);fs.mkdirSync(p.dirname(f),{recursive:!0});fs.writeFileSync(f,v);console.log(k)}console.log("Done:",Object.keys(d).length)

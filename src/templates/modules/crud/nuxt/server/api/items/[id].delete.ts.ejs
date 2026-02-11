@@ -1,0 +1,59 @@
+import { defineEventHandler, getRouterParam, createError } from 'h3'
+<% if (orm === 'prisma') { %>
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+<% } %>
+
+export default defineEventHandler(async (event) => {
+  const id = getRouterParam(event, 'id')
+
+  if (!id) {
+    throw createError({
+      statusCode: 400,
+      message: 'Item ID is required.',
+    })
+  }
+
+<% if (orm === 'prisma') { %>
+  const existing = await prisma.item.findUnique({
+    where: { id },
+  })
+
+  if (!existing) {
+    throw createError({
+      statusCode: 404,
+      message: 'Item not found.',
+    })
+  }
+
+  await prisma.item.delete({
+    where: { id },
+  })
+<% } else { %>
+  // TODO: Replace with your data source
+  const existing = await findItemById(id)
+
+  if (!existing) {
+    throw createError({
+      statusCode: 404,
+      message: 'Item not found.',
+    })
+  }
+
+  await deleteItem(id)
+<% } %>
+
+  return { message: 'Item deleted successfully.' }
+})
+
+<% if (orm !== 'prisma') { %>
+// Placeholder: replace with your actual data source
+async function findItemById(id: string) {
+  return null
+}
+
+async function deleteItem(id: string) {
+  // Example: return db.query('DELETE FROM items WHERE id = ?', [id])
+}
+<% } %>

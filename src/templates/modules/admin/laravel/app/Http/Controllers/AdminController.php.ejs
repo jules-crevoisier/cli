@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+
+class AdminController extends Controller
+{
+    public function dashboard(): JsonResponse
+    {
+        return response()->json([
+            'stats' => [
+                'total_users' => 0,
+                'total_items' => 0,
+            ],
+        ]);
+    }
+
+    public function users(): JsonResponse
+    {
+        return response()->json(['users' => []]);
+    }
+}

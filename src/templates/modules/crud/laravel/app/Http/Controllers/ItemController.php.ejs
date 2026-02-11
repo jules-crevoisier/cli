@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Item;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class ItemController extends Controller
+{
+    public function index(): JsonResponse
+    {
+        return response()->json(Item::all());
+    }
+
+    public function show(int $id): JsonResponse
+    {
+        $item = Item::find($id);
+        if (!$item) return response()->json(['error' => 'Item not found'], 404);
+        return response()->json($item);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate(['title' => 'required|string']);
+        $item = Item::create($request->only(['title', 'description']));
+        return response()->json($item, 201);
+    }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $item = Item::find($id);
+        if (!$item) return response()->json(['error' => 'Item not found'], 404);
+        $item->update($request->only(['title', 'description']));
+        return response()->json($item);
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $item = Item::find($id);
+        if (!$item) return response()->json(['error' => 'Item not found'], 404);
+        $item->delete();
+        return response()->json(null, 204);
+    }
+}

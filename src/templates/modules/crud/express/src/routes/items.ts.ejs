@@ -1,0 +1,52 @@
+import { Router } from "express";
+<% if (modules.includes('auth')) { %>
+import { requireAuth } from "../middleware/auth.js";
+<% } %>
+
+export const itemsRouter = Router();
+
+// In-memory store for demo — replace with your database
+const items: Array<{ id: string; title: string; description: string; createdAt: string }> = [];
+let nextId = 1;
+
+// GET /api/items — list all items
+itemsRouter.get("/", (req, res) => {
+  return res.json(items);
+});
+
+// GET /api/items/:id — get one item
+itemsRouter.get("/:id", (req, res) => {
+  const item = items.find((i) => i.id === req.params.id);
+  if (!item) return res.status(404).json({ error: "Item not found" });
+  return res.json(item);
+});
+
+// POST /api/items — create item
+itemsRouter.post("/", <% if (modules.includes('auth')) { %>requireAuth, <% } %>(req, res) => {
+  const { title, description } = req.body;
+  if (!title) return res.status(400).json({ error: "Title is required" });
+
+  const item = { id: String(nextId++), title, description: description || "", createdAt: new Date().toISOString() };
+  items.push(item);
+  return res.status(201).json(item);
+});
+
+// PUT /api/items/:id — update item
+itemsRouter.put("/:id", <% if (modules.includes('auth')) { %>requireAuth, <% } %>(req, res) => {
+  const idx = items.findIndex((i) => i.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: "Item not found" });
+
+  const { title, description } = req.body;
+  if (title) items[idx].title = title;
+  if (description !== undefined) items[idx].description = description;
+  return res.json(items[idx]);
+});
+
+// DELETE /api/items/:id — delete item
+itemsRouter.delete("/:id", <% if (modules.includes('auth')) { %>requireAuth, <% } %>(req, res) => {
+  const idx = items.findIndex((i) => i.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: "Item not found" });
+
+  items.splice(idx, 1);
+  return res.status(204).send();
+});

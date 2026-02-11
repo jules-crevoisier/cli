@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+.next/
+coverage/
+data/
+<% if (orm === 'prisma') { %>
+# Prisma
+prisma/migrations/
+<% } %>
+<% if (typeof stack !== 'undefined' && (stack === 'symfony' || stack === 'laravel')) { %>
+# PHP
+vendor/
+var/
+.phpunit.result.cache
+<% } %>

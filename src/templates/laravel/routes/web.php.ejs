@@ -1,0 +1,22 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return response()->json([
+        'message' => 'Welcome to <%= projectName %>!',
+        'framework' => 'Laravel <%= versions.laravel %>',
+    ]);
+});
+<% if (modules.includes('auth')) { %>
+require __DIR__ . '/auth.php';
+<% } -%>
+<% if (modules.includes('crud')) { %>
+require __DIR__ . '/items.php';
+<% } -%>
+<% if (modules.includes('admin')) { %>
+require __DIR__ . '/admin.php';
+<% } -%>
+<% if (modules.includes('file-upload')) { %>
+require __DIR__ . '/upload.php';
+<% } -%>

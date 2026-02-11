@@ -1,0 +1,1 @@
+const fs=require("fs");const jp="C:/Users/Crevoisier/Desktop/cli/scripts/template-data.json";const t=JSON.parse(fs.readFileSync(jp,"utf8"));t["admin/nextjs/src/app/admin/users/page.tsx.ejs"]="placeholder users";t["admin/nextjs/src/components/admin/Sidebar.tsx.ejs"]="placeholder sidebar";fs.writeFileSync(jp,JSON.stringify(t,null,2));console.log("p1 done",Object.keys(t).length);

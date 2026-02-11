@@ -1,0 +1,37 @@
+# Multi-stage production build for Nuxt
+# Usage: docker build -t <%= projectName %> . && docker run -p 3000:3000 <%= projectName %>
+
+# --- Stage 1: Install dependencies ---
+FROM node:<%= versions.node %>-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# --- Stage 2: Build ---
+FROM node:<%= versions.node %>-alpine AS builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+COPY . .
+<% if (orm === 'prisma') { %>RUN npx prisma generate
+<% } %>RUN npm run build
+
+# --- Stage 3: Production ---
+FROM node:<%= versions.node %>-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nuxtjs
+
+COPY --from=builder --chown=nuxtjs:nodejs /app/.output ./.output
+
+USER nuxtjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", ".output/server/index.mjs"]

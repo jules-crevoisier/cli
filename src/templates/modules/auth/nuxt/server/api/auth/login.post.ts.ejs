@@ -1,0 +1,86 @@
+import { defineEventHandler, readBody, createError } from 'h3'
+<% if (authStrategy === 'jwt') { %>
+import { verifyPassword, signToken } from '~/server/utils/auth'
+<% } else { %>
+import { verifyPassword } from '~/server/utils/auth'
+<% } %>
+<% if (orm === 'prisma') { %>
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+<% } %>
+
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event)
+
+  if (!body.email || !body.password) {
+    throw createError({
+      statusCode: 400,
+      message: 'Email and password are required.',
+    })
+  }
+
+<% if (orm === 'prisma') { %>
+  const user = await prisma.user.findUnique({
+    where: { email: body.email },
+  })
+<% } else { %>
+  // TODO: Replace with your data source
+  const user = await findUserByEmail(body.email)
+<% } %>
+
+  if (!user) {
+    throw createError({
+      statusCode: 401,
+      message: 'Invalid email or password.',
+    })
+  }
+
+  const isValid = await verifyPassword(body.password, user.password)
+
+  if (!isValid) {
+    throw createError({
+      statusCode: 401,
+      message: 'Invalid email or password.',
+    })
+  }
+
+<% if (authStrategy === 'jwt') { %>
+  const token = signToken({ userId: user.id, email: user.email })
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    },
+  }
+<% } else { %>
+  // Session-based auth
+  const session = await useSession(event, {
+    password: useRuntimeConfig().sessionSecret,
+  })
+
+  await session.update({
+    userId: user.id,
+    email: user.email,
+  })
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    },
+  }
+<% } %>
+})
+
+<% if (orm !== 'prisma') { %>
+// Placeholder: replace with your actual data source
+async function findUserByEmail(email: string) {
+  // Example: return db.query('SELECT * FROM users WHERE email = ?', [email])
+  return null
+}
+<% } %>

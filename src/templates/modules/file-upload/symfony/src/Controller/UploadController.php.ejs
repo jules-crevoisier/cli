@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Controller;
+
+use App\Service\StorageService;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+
+class UploadController extends AbstractController
+{
+    public function __construct(
+        private readonly StorageService $storageService
+    ) {}
+
+    #[Route('/api/upload', name: 'api_upload', methods: ['POST'])]
+    public function upload(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $filename = $data['filename'] ?? null;
+        $content = $data['content'] ?? null;
+        $contentType = $data['contentType'] ?? 'application/octet-stream';
+
+        if (!$filename || !$content) {
+            return $this->json(['error' => 'filename and content are required'], 400);
+        }
+
+        $body = base64_decode($content);
+        $key = sprintf('uploads/%s-%s', time(), $filename);
+
+        try {
+            $url = $this->storageService->upload($key, $body, $contentType);
+            return $this->json(['key' => $key, 'url' => $url], 201);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Upload failed'], 500);
+        }
+    }
+}

@@ -1,0 +1,9 @@
+<?php
+
+return [
+    Symfony\Bundle\FrameworkBundle\FrameworkBundle::class => ['all' => true],<% if (databases.includes('postgresql') || databases.includes('mysql') || databases.includes('sqlite')) { %>
+    Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
+    Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle::class => ['all' => true],<% } %><% if (databases.includes('mongodb')) { %>
+    Doctrine\Bundle\MongoDBBundle\DoctrineMongoDBBundle::class => ['all' => true],<% } %>
+    Symfony\Bundle\MakerBundle\MakerBundle::class => ['dev' => true],
+];

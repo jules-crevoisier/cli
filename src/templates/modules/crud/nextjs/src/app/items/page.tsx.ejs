@@ -1,0 +1,65 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
+interface Item {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+}
+
+export default function ItemsPage() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    fetch("/api/items").then((r) => r.json()).then(setItems);
+  }, []);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await fetch("/api/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, description }),
+    });
+    if (res.ok) {
+      const item = await res.json();
+      setItems([...items, item]);
+      setTitle("");
+      setDescription("");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    await fetch("/api/items/" + id, { method: "DELETE" });
+    setItems(items.filter((i) => i.id !== id));
+  }
+
+  return (
+    <main className="max-w-2xl mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-6">Items</h1>
+
+      <form onSubmit={handleCreate} className="mb-8 space-y-3">
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" required className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+        <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Add Item</button>
+      </form>
+
+      <ul className="space-y-3">
+        {items.map((item) => (
+          <li key={item.id} className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <h3 className="font-medium">{item.title}</h3>
+              {item.description && <p className="text-sm text-gray-600">{item.description}</p>}
+            </div>
+            <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm">Delete</button>
+          </li>
+        ))}
+        {items.length === 0 && <p className="text-gray-500">No items yet. Add one above!</p>}
+      </ul>
+    </main>
+  );
+}

@@ -1,0 +1,60 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"<% if (eslintPrettier) { %>,
+    "lint": "eslint .",
+    "format": "prettier --write ."<% } %>,
+    "test": "vitest run"<% if (orm === 'prisma') { %>,
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"<% } %>
+  },
+  "dependencies": {
+    "express": "^<%= versions.express %>"<% if (orm !== 'prisma' && databases.includes('postgresql')) { %>,
+    "pg": "^8"<% } %><% if (orm !== 'prisma' && databases.includes('mysql')) { %>,
+    "mysql2": "^3"<% } %><% if (orm !== 'prisma' && databases.includes('sqlite')) { %>,
+    "better-sqlite3": "^11"<% } %><% if (databases.includes('mongodb')) { %>,
+    "mongodb": "^6"<% } %><% if (databases.includes('redis')) { %>,
+    "redis": "^4"<% } %><% if (orm === 'prisma') { %>,
+    "@prisma/client": "^6"<% } %><% if (modules.includes('auth')) { %>,
+    "bcryptjs": "^2"<% if (authStrategy === 'jwt') { %>,
+    "jsonwebtoken": "^9"<% } else { %>,
+    "express-session": "^1"<% } %><% } %><% if (modules.includes('api-docs')) { %>,
+    "swagger-ui-express": "^5",
+    "swagger-jsdoc": "^6"<% } %><% if (modules.includes('email')) { %>,
+    "nodemailer": "^6"<% } %><% if (modules.includes('file-upload')) { %>,
+    "@aws-sdk/client-s3": "^3",
+    "@aws-sdk/s3-request-presigner": "^3"<% } %><% if (modules.includes('i18n')) { %>,
+    "i18next": "^23"<% } %>
+  },
+  "devDependencies": {<% if (typescript) { %>
+    "typescript": "^<%= versions.typescript %>",
+    "@types/node": "^22",
+    "@types/express": "^5",<% } %>
+    "tsx": "^4",
+    "vitest": "^2"<% if (eslintPrettier) { %>,
+    "@eslint/js": "^<%= versions.eslint %>",
+    "eslint": "^<%= versions.eslint %>",
+    "eslint-config-prettier": "^10",<% if (typescript) { %>
+    "typescript-eslint": "^8",<% } %>
+    "prettier": "^<%= versions.prettier %>"<% } %><% if (orm === 'prisma') { %>,
+    "prisma": "^6"<% } %><% if (typescript && orm !== 'prisma' && databases.includes('sqlite')) { %>,
+    "@types/better-sqlite3": "^7"<% } %><% if (typescript && orm !== 'prisma' && databases.includes('postgresql')) { %>,
+    "@types/pg": "^8"<% } %><% if (modules.includes('auth')) { %>,
+    "@types/bcryptjs": "^2"<% if (authStrategy === 'jwt') { %>,
+    "@types/jsonwebtoken": "^9"<% } else { %>,
+    "@types/express-session": "^1"<% } %><% } %><% if (modules.includes('api-docs')) { %>,
+    "@types/swagger-ui-express": "^4",
+    "@types/swagger-jsdoc": "^6"<% } %><% if (modules.includes('email')) { %>,
+    "@types/nodemailer": "^6"<% } %>
+  }<% if (orm === 'prisma') { %>,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }<% } %>
+}

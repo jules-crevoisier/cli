@@ -1,0 +1,37 @@
+<script setup lang="ts">
+<% if (modules.includes('dark-mode')) { -%>
+import ThemeToggle from "~/components/ThemeToggle.vue";
+<% } -%>
+</script>
+
+<template>
+  <main class="flex min-h-screen flex-col items-center justify-center p-24">
+<% if (modules.includes('dark-mode')) { -%>
+    <div class="absolute top-4 right-4">
+      <ThemeToggle />
+    </div>
+<% } -%>
+    <h1 class="text-4xl font-bold mb-4"><%= projectName %></h1>
+    <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+      Get started by editing
+      <code class="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">pages/index.vue</code>
+    </p>
+<% if (modules.includes('auth') || modules.includes('admin') || modules.includes('crud') || modules.includes('api-docs')) { -%>
+    <div class="flex gap-4 flex-wrap justify-center">
+<% if (modules.includes('auth')) { -%>
+      <NuxtLink to="/login" class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Login</NuxtLink>
+      <NuxtLink to="/register" class="rounded-lg border border-blue-600 px-4 py-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950">Register</NuxtLink>
+<% } -%>
+<% if (modules.includes('admin')) { -%>
+      <NuxtLink to="/admin" class="rounded-lg bg-gray-800 px-4 py-2 text-white hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600">Admin</NuxtLink>
+<% } -%>
+<% if (modules.includes('crud')) { -%>
+      <NuxtLink to="/items" class="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700">Items</NuxtLink>
+<% } -%>
+<% if (modules.includes('api-docs')) { -%>
+      <NuxtLink to="/api/docs" class="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700">API Docs</NuxtLink>
+<% } -%>
+    </div>
+<% } -%>
+  </main>
+</template>

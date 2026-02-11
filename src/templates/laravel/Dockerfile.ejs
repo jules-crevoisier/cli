@@ -1,0 +1,26 @@
+FROM php:<%= versions.php %>-fpm-alpine AS base
+
+RUN apk add --no-cache nginx
+RUN docker-php-ext-install pdo pdo_mysql
+<% if (databases.includes('postgresql')) { %>RUN apk add --no-cache postgresql-dev && docker-php-ext-install pdo_pgsql
+<% } %>
+<% if (databases.includes('redis')) { %>RUN apk add --no-cache $PHPIZE_DEPS && pecl install redis && docker-php-ext-enable redis
+<% } %>
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+COPY composer.json composer.lock* ./
+RUN composer install --no-dev --no-scripts --no-autoloader
+
+COPY . .
+RUN composer dump-autoload --optimize
+
+COPY nginx.conf /etc/nginx/http.d/default.conf
+
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+
+EXPOSE 80
+
+CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]

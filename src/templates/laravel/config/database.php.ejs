@@ -1,0 +1,63 @@
+<?php
+
+return [
+<% if (databases.includes('postgresql')) { %>
+    'default' => env('DB_CONNECTION', 'pgsql'),
+<% } else if (databases.includes('mysql')) { %>
+    'default' => env('DB_CONNECTION', 'mysql'),
+<% } else if (databases.includes('sqlite')) { %>
+    'default' => env('DB_CONNECTION', 'sqlite'),
+<% } else if (databases.includes('mongodb')) { %>
+    'default' => env('DB_CONNECTION', 'mongodb'),
+<% } else { %>
+    'default' => env('DB_CONNECTION', 'sqlite'),
+<% } %>
+
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ],
+        'mysql' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST', 'db-mysql'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', '<%= projectName.replace(/-/g, "_") %>'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', 'root'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+        ],
+        'pgsql' => [
+            'driver' => 'pgsql',
+            'host' => env('DB_HOST', 'db-postgres'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', '<%= projectName.replace(/-/g, "_") %>'),
+            'username' => env('DB_USERNAME', 'postgres'),
+            'password' => env('DB_PASSWORD', 'postgres'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+        ],<% if (databases.includes('mongodb')) { %>
+        'mongodb' => [
+            'driver' => 'mongodb',
+            'host' => env('DB_HOST', 'db-mongo'),
+            'port' => env('DB_PORT', 27017),
+            'database' => env('DB_DATABASE', '<%= projectName.replace(/-/g, "_") %>'),
+        ],<% } %>
+    ],
+<% if (databases.includes('redis')) { %>
+    'redis' => [
+        'client' => env('REDIS_CLIENT', 'predis'),
+        'default' => [
+            'host' => env('REDIS_HOST', 'db-redis'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
+        ],
+    ],
+<% } %>
+];

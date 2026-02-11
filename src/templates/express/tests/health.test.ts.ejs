@@ -1,0 +1,10 @@
+import { describe, it, expect } from "vitest";
+
+describe("Health endpoint", () => {
+  it("should return ok status", async () => {
+    const response = await fetch("http://localhost:<%= port %>/api/health");
+    const data = await response.json();
+    expect(data.status).toBe("ok");
+    expect(data.timestamp).toBeDefined();
+  });
+});

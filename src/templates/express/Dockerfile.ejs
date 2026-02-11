@@ -1,0 +1,37 @@
+# Multi-stage production build for Express
+# Usage: docker build -t <%= projectName %> . && docker run -p <%= port %>:<%= port %> <%= projectName %>
+
+# --- Stage 1: Install dependencies ---
+FROM node:<%= versions.node %>-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+
+# --- Stage 2: Build ---
+FROM node:<%= versions.node %>-alpine AS builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+<% if (typescript) { %>COPY tsconfig.json ./
+<% } %>RUN npm ci
+COPY . .
+<% if (orm === 'prisma') { %>RUN npx prisma generate
+<% } %><% if (typescript) { %>RUN npm run build
+<% } %>
+
+# --- Stage 3: Production ---
+FROM node:<%= versions.node %>-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+<% if (typescript) { %>COPY --from=builder /app/dist ./dist
+<% } else { %>COPY --from=builder /app/src ./src
+<% } %><% if (orm === 'prisma') { %>COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
+<% } %>
+
+EXPOSE <%= port %>
+
+CMD ["node", "<%= typescript ? 'dist/index.js' : 'src/index.js' %>"]

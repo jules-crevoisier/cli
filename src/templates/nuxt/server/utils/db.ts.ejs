@@ -1,0 +1,61 @@
+<% if (orm === 'prisma') { -%>
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export default prisma;
+<% } else { -%>
+<% if (databases.includes('postgresql')) { -%>
+import pg from "pg";
+
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export default pool;
+<% } -%>
+<% if (databases.includes('mysql')) { -%>
+import mysql from "mysql2/promise";
+
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST || "localhost",
+  port: parseInt(process.env.MYSQL_PORT || "3306"),
+  user: process.env.MYSQL_USER || "root",
+  password: process.env.MYSQL_PASSWORD || "root",
+  database: process.env.MYSQL_DATABASE || "<%= projectName.replace(/-/g, '_') %>",
+});
+
+export default pool;
+<% } -%>
+<% if (databases.includes('mongodb')) { -%>
+import { MongoClient } from "mongodb";
+
+const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/<%= projectName.replace(/-/g, '_') %>");
+const db = client.db();
+
+export { client, db };
+<% } -%>
+<% if (databases.includes('redis')) { -%>
+import { createClient } from "redis";
+
+const redis = createClient({
+  url: process.env.REDIS_URL || "redis://localhost:6379",
+});
+
+redis.on("error", (err) => console.error("Redis error:", err));
+
+export default redis;
+<% } -%>
+<% if (databases.includes('sqlite')) { -%>
+import Database from "better-sqlite3";
+import path from "path";
+
+const db = new Database(
+  process.env.SQLITE_PATH || path.join(process.cwd(), "data", "database.sqlite")
+);
+
+db.pragma("journal_mode = WAL");
+
+export default db;
+<% } -%>
+<% } -%>

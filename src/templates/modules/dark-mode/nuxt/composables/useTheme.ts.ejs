@@ -1,0 +1,39 @@
+import { ref, onMounted } from 'vue';
+
+const isDark = ref(false);
+
+export function useTheme() {
+  function applyTheme(dark: boolean) {
+    isDark.value = dark;
+    if (import.meta.client) {
+      document.documentElement.classList.toggle('dark', dark);
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    }
+  }
+
+  function toggleTheme() {
+    applyTheme(!isDark.value);
+  }
+
+  function initTheme() {
+    if (!import.meta.client) return;
+
+    const stored = localStorage.getItem('theme');
+    if (stored) {
+      applyTheme(stored === 'dark');
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(prefersDark);
+    }
+  }
+
+  onMounted(() => {
+    initTheme();
+  });
+
+  return {
+    isDark,
+    toggleTheme,
+    initTheme,
+  };
+}

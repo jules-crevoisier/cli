@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Item;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
+
+#[Route('/api/items')]
+class ItemController extends AbstractController
+{
+    public function __construct(private EntityManagerInterface $em) {}
+
+    #[Route('', methods: ['GET'])]
+    public function list(): JsonResponse
+    {
+        $items = $this->em->getRepository(Item::class)->findAll();
+        return $this->json(array_map(fn(Item $i) => $i->toArray(), $items));
+    }
+
+    #[Route('/{id}', methods: ['GET'])]
+    public function show(int $id): JsonResponse
+    {
+        $item = $this->em->find(Item::class, $id);
+        if (!$item) return $this->json(['error' => 'Item not found'], 404);
+        return $this->json($item->toArray());
+    }
+
+    #[Route('', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $item = new Item();
+        $item->setTitle($data['title'] ?? '');
+        $item->setDescription($data['description'] ?? '');
+        $this->em->persist($item);
+        $this->em->flush();
+        return $this->json($item->toArray(), 201);
+    }
+
+    #[Route('/{id}', methods: ['PUT'])]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $item = $this->em->find(Item::class, $id);
+        if (!$item) return $this->json(['error' => 'Item not found'], 404);
+
+        $data = json_decode($request->getContent(), true);
+        if (isset($data['title'])) $item->setTitle($data['title']);
+        if (isset($data['description'])) $item->setDescription($data['description']);
+        $this->em->flush();
+        return $this->json($item->toArray());
+    }
+
+    #[Route('/{id}', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        $item = $this->em->find(Item::class, $id);
+        if (!$item) return $this->json(['error' => 'Item not found'], 404);
+        $this->em->remove($item);
+        $this->em->flush();
+        return $this->json(null, 204);
+    }
+}

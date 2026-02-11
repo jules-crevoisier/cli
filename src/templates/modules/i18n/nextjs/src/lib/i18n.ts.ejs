@@ -1,0 +1,6 @@
+// i18n configuration for Next.js (next-intl)
+// See: https://next-intl-docs.vercel.app/
+
+export const locales = ["en", "fr"] as const;
+export type Locale = (typeof locales)[number];
+export const defaultLocale: Locale = "en";

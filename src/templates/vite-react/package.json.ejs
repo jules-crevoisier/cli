@@ -1,0 +1,53 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"<% if (eslintPrettier) { %>,
+    "lint": "eslint .",
+    "format": "prettier --write ."<% } %><% if (orm === 'prisma') { %>,
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"<% } %>
+  },
+  "dependencies": {
+    "react": "^<%= versions.react %>",
+    "react-dom": "^<%= versions.react %>"<% if (modules.includes('i18n')) { %>,
+    "react-i18next": "^15",
+    "i18next": "^24"<% } %><% if (modules.includes('auth')) { %>,
+    "react-router-dom": "^7"<% } %><% if (orm !== 'prisma' && databases.includes('postgresql')) { %>,
+    "pg": "^8"<% } %><% if (orm !== 'prisma' && databases.includes('mysql')) { %>,
+    "mysql2": "^3"<% } %><% if (orm !== 'prisma' && databases.includes('sqlite')) { %>,
+    "better-sqlite3": "^11"<% } %><% if (databases.includes('mongodb')) { %>,
+    "mongodb": "^6"<% } %><% if (databases.includes('redis')) { %>,
+    "redis": "^4"<% } %><% if (orm === 'prisma') { %>,
+    "@prisma/client": "^6"<% } %>
+  },
+  "devDependencies": {
+    "vite": "^<%= versions.vite %>",
+    "@vitejs/plugin-react": "^4",<% if (typescript) { %>
+    "typescript": "^<%= versions.typescript %>",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",<% } %>
+    "tailwindcss": "^<%= versions.tailwind %>",
+    "@tailwindcss/vite": "^<%= versions.tailwind %>"<% if (eslintPrettier) { %>,
+    "@eslint/js": "^<%= versions.eslint %>",
+    "eslint": "^<%= versions.eslint %>",
+    "eslint-config-prettier": "^10",
+    "eslint-plugin-react": "^7",
+    "eslint-plugin-react-hooks": "^5",<% if (typescript) { %>
+    "typescript-eslint": "^8",<% } %>
+    "prettier": "^<%= versions.prettier %>"<% } %><% if (orm === 'prisma') { %>,
+    "prisma": "^6",
+    "tsx": "^4"<% } %><% if (typescript && orm !== 'prisma' && databases.includes('sqlite')) { %>,
+    "@types/better-sqlite3": "^7"<% } %><% if (typescript && orm !== 'prisma' && databases.includes('postgresql')) { %>,
+    "@types/pg": "^8"<% } %>
+  }<% if (orm === 'prisma') { %>,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }<% } %>
+}

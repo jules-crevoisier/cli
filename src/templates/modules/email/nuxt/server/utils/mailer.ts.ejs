@@ -1,0 +1,48 @@
+import nodemailer, { type Transporter } from 'nodemailer';
+
+let _transporter: Transporter | null = null;
+
+function getTransporter(): Transporter {
+  if (!_transporter) {
+    const config = useRuntimeConfig();
+
+    _transporter = nodemailer.createTransport({
+      host: config.mailHost,
+      port: Number(config.mailPort) || 587,
+      secure: Number(config.mailPort) === 465,
+      auth: config.mailUser
+        ? {
+            user: config.mailUser,
+            pass: config.mailPass,
+          }
+        : undefined,
+    });
+  }
+
+  return _transporter;
+}
+
+export interface SendMailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+export async function sendMail(options: SendMailOptions) {
+  const config = useRuntimeConfig();
+  const transporter = getTransporter();
+
+  const info = await transporter.sendMail({
+    from: config.mailFrom || 'noreply@example.com',
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    text: options.text,
+  });
+
+  return {
+    messageId: info.messageId,
+    accepted: info.accepted,
+  };
+}

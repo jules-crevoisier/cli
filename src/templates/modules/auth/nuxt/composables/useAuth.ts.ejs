@@ -1,0 +1,99 @@
+interface User {
+  id: string
+  email: string
+  name: string
+}
+
+interface AuthState {
+  user: Ref<User | null>
+  token: Ref<string | null>
+  isAuthenticated: ComputedRef<boolean>
+  login: (email: string, password: string) => Promise<void>
+  register: (email: string, name: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  fetchUser: () => Promise<void>
+}
+
+export const useAuth = (): AuthState => {
+<% if (authStrategy === 'jwt') { %>
+  const token = useCookie<string | null>('auth_token', {
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: '/',
+  })
+<% } else { %>
+  const token = ref<string | null>(null)
+<% } %>
+
+  const user = useState<User | null>('auth_user', () => null)
+
+  const isAuthenticated = computed(() => !!user.value)
+
+  const login = async (email: string, password: string) => {
+    const data = await $fetch<{ token?: string; user: User }>('/api/auth/login', {
+      method: 'POST',
+      body: { email, password },
+    })
+
+<% if (authStrategy === 'jwt') { %>
+    token.value = data.token ?? null
+<% } %>
+    user.value = data.user
+  }
+
+  const register = async (email: string, name: string, password: string) => {
+    const data = await $fetch<{ token?: string; user: User }>('/api/auth/register', {
+      method: 'POST',
+      body: { email, name, password },
+    })
+
+<% if (authStrategy === 'jwt') { %>
+    token.value = data.token ?? null
+<% } %>
+    user.value = data.user
+  }
+
+  const logout = async () => {
+<% if (authStrategy === 'jwt') { %>
+    token.value = null
+<% } else { %>
+    await $fetch('/api/auth/logout', { method: 'POST' })
+<% } %>
+    user.value = null
+    await navigateTo('/login')
+  }
+
+  const fetchUser = async () => {
+<% if (authStrategy === 'jwt') { %>
+    if (!token.value) {
+      user.value = null
+      return
+    }
+<% } %>
+
+    try {
+      const data = await $fetch<{ user: User }>('/api/auth/me', {
+<% if (authStrategy === 'jwt') { %>
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
+<% } %>
+      })
+      user.value = data.user
+    } catch {
+<% if (authStrategy === 'jwt') { %>
+      token.value = null
+<% } %>
+      user.value = null
+    }
+  }
+
+  return {
+    user,
+    token,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    fetchUser,
+  }
+}

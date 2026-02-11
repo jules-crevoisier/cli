@@ -1,0 +1,32 @@
+import { Sidebar } from '../../components/admin/Sidebar';
+
+const stats = [
+  { label: 'Total Users', value: 128, icon: '👤' },
+  { label: 'Total Items', value: 456, icon: '📦' },
+  { label: 'Recent Activity', value: 34, icon: '📊' },
+  { label: 'Active Sessions', value: 12, icon: '🔗' },
+];
+
+export function AdminDashboard({ onNavigate }: { onNavigate: (page: string) => void }) {
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar currentPage="admin" onNavigate={onNavigate} />
+      <main className="flex-1 bg-gray-100 p-8">
+        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+        <p className="text-gray-600 mb-6">Welcome back, Admin</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-white rounded-lg shadow p-6"
+            >
+              <div className="text-2xl mb-2">{stat.icon}</div>
+              <div className="text-sm text-gray-500">{stat.label}</div>
+              <div className="text-3xl font-bold mt-1">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+}

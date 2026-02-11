@@ -1,0 +1,1 @@
+const fs=require("fs");const d={};module.exports={d,save:()=>fs.writeFileSync("C:/Users/Crevoisier/Desktop/cli/scripts/td.json",JSON.stringify(d,null,0))};

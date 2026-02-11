@@ -1,0 +1,18 @@
+import { Router } from "express";
+import { healthRouter } from "./health.js";
+<% if (modules.includes('crud')) { %>
+import { itemsRouter } from "./items.js";
+<% } -%>
+<% if (modules.includes('file-upload')) { %>
+import { uploadRouter } from "./upload.js";
+<% } -%>
+
+export const router = Router();
+
+router.use("/health", healthRouter);
+<% if (modules.includes('crud')) { %>
+router.use("/items", itemsRouter);
+<% } -%>
+<% if (modules.includes('file-upload')) { %>
+router.use("/upload", uploadRouter);
+<% } -%>

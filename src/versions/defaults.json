@@ -1,0 +1,22 @@
+{
+  "node": "22",
+  "typescript": "5.7",
+  "nextjs": "15.1",
+  "react": "19",
+  "vite": "6",
+  "nuxt": "3.15",
+  "express": "5",
+  "tailwind": "4",
+  "eslint": "9",
+  "prettier": "3",
+  "php": "8.3",
+  "composer": "2",
+  "symfony": "7.2",
+  "laravel": "11",
+  "databases": {
+    "postgresql": "17",
+    "mongodb": "8",
+    "mysql": "9",
+    "redis": "7.4"
+  }
+}

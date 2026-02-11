@@ -1,0 +1,60 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"<% if (eslintPrettier) { %>,
+    "lint": "next lint",
+    "format": "prettier --write ."<% } %><% if (orm === 'prisma') { %>,
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"<% } %>
+  },
+  "dependencies": {
+    "next": "^<%= versions.nextjs %>",
+    "react": "^<%= versions.react %>",
+    "react-dom": "^<%= versions.react %>"<% if (orm !== 'prisma' && databases.includes('postgresql')) { %>,
+    "pg": "^8"<% } %><% if (orm !== 'prisma' && databases.includes('mysql')) { %>,
+    "mysql2": "^3"<% } %><% if (orm !== 'prisma' && databases.includes('sqlite')) { %>,
+    "better-sqlite3": "^11"<% } %><% if (databases.includes('mongodb')) { %>,
+    "mongodb": "^6"<% } %><% if (databases.includes('redis')) { %>,
+    "redis": "^4"<% } %><% if (orm === 'prisma') { %>,
+    "@prisma/client": "^6"<% } %><% if (modules.includes('auth')) { %>,
+    "bcryptjs": "^2"<% if (authStrategy === 'jwt') { %>,
+    "jsonwebtoken": "^9"<% } %><% } %><% if (modules.includes('email')) { %>,
+    "nodemailer": "^6"<% } %><% if (modules.includes('file-upload')) { %>,
+    "@aws-sdk/client-s3": "^3",
+    "@aws-sdk/s3-request-presigner": "^3"<% } %><% if (modules.includes('i18n')) { %>,
+    "next-intl": "^3"<% } %>
+  },
+  "devDependencies": {<% if (typescript) { %>
+    "typescript": "^<%= versions.typescript %>",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",<% } %>
+    "tailwindcss": "^<%= versions.tailwind %>",
+    "@tailwindcss/postcss": "^<%= versions.tailwind %>"<% if (eslintPrettier) { %>,
+    "@eslint/js": "^<%= versions.eslint %>",
+    "eslint": "^<%= versions.eslint %>",
+    "eslint-config-next": "^<%= versions.nextjs %>",
+    "eslint-config-prettier": "^10",
+    "eslint-plugin-react": "^7",
+    "eslint-plugin-react-hooks": "^5",
+    "@next/eslint-plugin-next": "^<%= versions.nextjs %>",<% if (typescript) { %>
+    "typescript-eslint": "^8",<% } %>
+    "prettier": "^<%= versions.prettier %>"<% } %><% if (orm === 'prisma') { %>,
+    "prisma": "^6"<% } %><% if (typescript && orm !== 'prisma' && databases.includes('sqlite')) { %>,
+    "@types/better-sqlite3": "^7"<% } %><% if (typescript && orm !== 'prisma' && databases.includes('postgresql')) { %>,
+    "@types/pg": "^8"<% } %><% if (modules.includes('auth')) { %>,
+    "@types/bcryptjs": "^2"<% if (authStrategy === 'jwt') { %>,
+    "@types/jsonwebtoken": "^9"<% } %><% } %><% if (modules.includes('email')) { %>,
+    "@types/nodemailer": "^6"<% } %>
+  }<% if (orm === 'prisma') { %>,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }<% } %>
+}

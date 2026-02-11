@@ -1,0 +1,97 @@
+import { defineEventHandler, getHeader, createError } from 'h3'
+import { verifyToken } from '~/server/utils/auth'
+<% if (orm === 'prisma') { %>
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+<% } %>
+
+export default defineEventHandler(async (event) => {
+<% if (authStrategy === 'jwt') { %>
+  const authorization = getHeader(event, 'Authorization')
+
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized. No token provided.',
+    })
+  }
+
+  const token = authorization.split(' ')[1]
+
+  let payload: any
+  try {
+    payload = verifyToken(token)
+  } catch {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized. Invalid or expired token.',
+    })
+  }
+
+<% if (orm === 'prisma') { %>
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      createdAt: true,
+    },
+  })
+<% } else { %>
+  // TODO: Replace with your data source
+  const user = await findUserById(payload.userId)
+<% } %>
+
+  if (!user) {
+    throw createError({
+      statusCode: 404,
+      message: 'User not found.',
+    })
+  }
+
+  return { user }
+<% } else { %>
+  const session = await useSession(event, {
+    password: useRuntimeConfig().sessionSecret,
+  })
+
+  if (!session.data?.userId) {
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized. No active session.',
+    })
+  }
+
+<% if (orm === 'prisma') { %>
+  const user = await prisma.user.findUnique({
+    where: { id: session.data.userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      createdAt: true,
+    },
+  })
+<% } else { %>
+  const user = await findUserById(session.data.userId)
+<% } %>
+
+  if (!user) {
+    throw createError({
+      statusCode: 404,
+      message: 'User not found.',
+    })
+  }
+
+  return { user }
+<% } %>
+})
+
+<% if (orm !== 'prisma') { %>
+// Placeholder: replace with your actual data source
+async function findUserById(id: string) {
+  return null
+}
+<% } %>

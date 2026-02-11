@@ -1,0 +1,158 @@
+<template>
+  <div class="admin-layout">
+    <AdminSidebar />
+    <main class="admin-content">
+      <div class="page-header">
+        <h1>User Management</h1>
+      </div>
+
+      <div v-if="pending" class="loading">Loading users...</div>
+
+      <div v-else-if="error" class="error">
+        Failed to load users. <button @click="refresh()">Retry</button>
+      </div>
+
+      <div v-else>
+        <table v-if="data?.users?.length" class="users-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in data.users" :key="user.id">
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span :class="['role-badge', `role-${user.role}`]">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
+              <td class="actions">
+                <select
+                  :value="user.role"
+                  @change="handleRoleChange(user.id, ($event.target as HTMLSelectElement).value)"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p v-else class="empty">No users found.</p>
+      </div>
+    </main>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: 'default',
+  middleware: ['auth', 'admin'],
+})
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  createdAt: string
+}
+
+const { data, pending, error, refresh } = await useFetch<{ users: User[] }>('/api/admin/users')
+
+async function handleRoleChange(userId: string, newRole: string) {
+  try {
+    await $fetch(`/api/admin/users/${userId}`, {
+      method: 'PATCH',
+      body: { role: newRole },
+    })
+    await refresh()
+  } catch (e: any) {
+    alert(e.data?.message || 'Failed to update user role.')
+  }
+}
+</script>
+
+<style scoped>
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.users-table th {
+  font-weight: 600;
+  background-color: #f7fafc;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.role-admin {
+  background-color: #fed7d7;
+  color: #c53030;
+}
+
+.role-user {
+  background-color: #c6f6d5;
+  color: #276749;
+}
+
+.actions select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #e53e3e;
+}
+</style>

@@ -1,0 +1,49 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: "2025-01-01",
+  devtools: { enabled: true },
+
+  modules: [
+    "@nuxtjs/tailwindcss",<% if (modules.includes('i18n')) { %>
+    "@nuxtjs/i18n",<% } %>
+  ],
+<% if (modules.includes('i18n')) { %>
+  i18n: {
+    locales: [
+      { code: "en", file: "en.json" },
+      { code: "fr", file: "fr.json" },
+    ],
+    defaultLocale: "en",
+    langDir: "locales/",
+  },
+<% } %>
+  runtimeConfig: {
+<% if (modules.includes('auth')) { -%>
+    jwtSecret: process.env.JWT_SECRET || "change-me",
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
+<% } -%>
+<% if (databases.includes('postgresql') || databases.includes('mysql') || databases.includes('sqlite')) { -%>
+    databaseUrl: process.env.DATABASE_URL || "",
+<% } -%>
+<% if (databases.includes('mongodb')) { -%>
+    mongodbUri: process.env.MONGODB_URI || "",
+<% } -%>
+<% if (databases.includes('redis')) { -%>
+    redisUrl: process.env.REDIS_URL || "",
+<% } -%>
+<% if (services.includes('minio')) { -%>
+    s3Endpoint: process.env.S3_ENDPOINT || "",
+    s3AccessKey: process.env.S3_ACCESS_KEY || "",
+    s3SecretKey: process.env.S3_SECRET_KEY || "",
+    s3Bucket: process.env.S3_BUCKET || "",
+<% } -%>
+<% if (services.includes('mailpit')) { -%>
+    mailHost: process.env.MAIL_HOST || "localhost",
+    mailPort: parseInt(process.env.MAIL_PORT || "1025"),
+    mailFrom: process.env.MAIL_FROM || "noreply@example.com",
+<% } -%>
+    public: {
+      appName: "<%= projectName %>",
+    },
+  },
+});

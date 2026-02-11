@@ -1,0 +1,70 @@
+import { defineEventHandler, getRouterParam, readBody, createError } from 'h3'
+<% if (orm === 'prisma') { %>
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+<% } %>
+
+export default defineEventHandler(async (event) => {
+  const id = getRouterParam(event, 'id')
+
+  if (!id) {
+    throw createError({
+      statusCode: 400,
+      message: 'Item ID is required.',
+    })
+  }
+
+  const body = await readBody(event)
+
+<% if (orm === 'prisma') { %>
+  const existing = await prisma.item.findUnique({
+    where: { id },
+  })
+
+  if (!existing) {
+    throw createError({
+      statusCode: 404,
+      message: 'Item not found.',
+    })
+  }
+
+  const item = await prisma.item.update({
+    where: { id },
+    data: {
+      title: body.title ?? existing.title,
+      description: body.description !== undefined ? body.description : existing.description,
+    },
+  })
+
+  return { item }
+<% } else { %>
+  // TODO: Replace with your data source
+  const existing = await findItemById(id)
+
+  if (!existing) {
+    throw createError({
+      statusCode: 404,
+      message: 'Item not found.',
+    })
+  }
+
+  const item = await updateItem(id, {
+    title: body.title ?? existing.title,
+    description: body.description !== undefined ? body.description : existing.description,
+  })
+
+  return { item }
+<% } %>
+})
+
+<% if (orm !== 'prisma') { %>
+// Placeholder: replace with your actual data source
+async function findItemById(id: string) {
+  return null
+}
+
+async function updateItem(id: string, data: { title: string; description: string | null }) {
+  return { id, ...data, updatedAt: new Date() }
+}
+<% } %>

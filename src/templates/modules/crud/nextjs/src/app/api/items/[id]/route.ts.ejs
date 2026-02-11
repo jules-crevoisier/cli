@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from "next/server";
+
+// Shared items array (in production, use a database)
+const items: Array<{ id: string; title: string; description: string; createdAt: string }> = [];
+
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const item = items.find((i) => i.id === id);
+  if (!item) return NextResponse.json({ error: "Item not found" }, { status: 404 });
+  return NextResponse.json(item);
+}
+
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return NextResponse.json({ error: "Item not found" }, { status: 404 });
+
+  const { title, description } = await request.json();
+  if (title) items[idx].title = title;
+  if (description !== undefined) items[idx].description = description;
+  return NextResponse.json(items[idx]);
+}
+
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return NextResponse.json({ error: "Item not found" }, { status: 404 });
+
+  items.splice(idx, 1);
+  return new NextResponse(null, { status: 204 });
+}

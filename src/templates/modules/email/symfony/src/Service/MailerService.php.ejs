@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Service;
+
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+
+class MailerService
+{
+    public function __construct(private MailerInterface $mailer) {}
+
+    public function sendWelcome(string $to): void
+    {
+        $email = (new Email())
+            ->from($_ENV['MAIL_FROM'] ?? 'noreply@localhost')
+            ->to($to)
+            ->subject('Welcome!')
+            ->html('<h1>Welcome!</h1><p>Thank you for creating an account.</p>');
+
+        $this->mailer->send($email);
+    }
+}

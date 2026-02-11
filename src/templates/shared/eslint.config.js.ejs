@@ -1,0 +1,101 @@
+import js from '@eslint/js';
+<% if (stack === 'nextjs') { -%>
+import nextPlugin from '@next/eslint-plugin-next';
+import reactPlugin from 'eslint-plugin-react';
+import hooksPlugin from 'eslint-plugin-react-hooks';
+<% } else if (stack === 'vite-react' || stack === 'vite-react-express') { -%>
+import reactPlugin from 'eslint-plugin-react';
+import hooksPlugin from 'eslint-plugin-react-hooks';
+<% } else if (stack === 'nuxt') { -%>
+import vuePlugin from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
+<% } -%>
+<% if (typescript) { -%>
+import tseslint from 'typescript-eslint';
+<% } -%>
+import prettier from 'eslint-config-prettier';
+
+export default [
+  js.configs.recommended,
+<% if (typescript) { -%>
+  ...tseslint.configs.recommended,
+<% } -%>
+<% if (stack === 'nextjs') { -%>
+  {
+    plugins: {
+      '@next/next': nextPlugin,
+      'react': reactPlugin,
+      'react-hooks': hooksPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+      'react/react-in-jsx-scope': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+  },
+<% } else if (stack === 'vite-react' || stack === 'vite-react-express') { -%>
+  {
+    plugins: {
+      'react': reactPlugin,
+      'react-hooks': hooksPlugin,
+    },
+    rules: {
+      'react/react-in-jsx-scope': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+  },
+<% } else if (stack === 'nuxt') { -%>
+  ...vuePlugin.configs['flat/recommended'],
+<% if (typescript) { -%>
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: tseslint.parser,
+        sourceType: 'module',
+      },
+    },
+  },
+<% } -%>
+<% } -%>
+  {
+    rules: {
+      'no-unused-vars': 'off',
+<% if (typescript) { -%>
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+<% } -%>
+      'no-console': 'warn',
+    },
+  },
+  prettier,
+  {
+    ignores: [
+<% if (stack === 'nextjs') { -%>
+      '.next/',
+      'out/',
+<% } else if (stack === 'vite-react') { -%>
+      'dist/',
+<% } else if (stack === 'nuxt') { -%>
+      '.nuxt/',
+      '.output/',
+      'dist/',
+<% } else if (stack === 'vite-react-express') { -%>
+      'client/dist/',
+      'server/dist/',
+<% } else if (stack === 'express') { -%>
+      'dist/',
+<% } -%>
+      'node_modules/',
+    ],
+  },
+];

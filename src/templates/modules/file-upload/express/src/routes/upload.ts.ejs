@@ -1,0 +1,32 @@
+import { Router } from "express";
+import { uploadFile, getFileUrl, deleteFile } from "../lib/storage.js";
+
+export const uploadRouter = Router();
+
+uploadRouter.post("/", async (req, res, next) => {
+  try {
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", async () => {
+      const buffer = Buffer.concat(chunks);
+      const filename = req.headers["x-filename"] as string || `upload-${Date.now()}`;
+      const contentType = req.headers["content-type"] || "application/octet-stream";
+
+      const key = await uploadFile(buffer, filename, contentType);
+      const url = await getFileUrl(key);
+
+      res.json({ key, url });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+uploadRouter.delete("/:key", async (req, res, next) => {
+  try {
+    await deleteFile(req.params.key);
+    res.json({ message: "File deleted" });
+  } catch (error) {
+    next(error);
+  }
+});

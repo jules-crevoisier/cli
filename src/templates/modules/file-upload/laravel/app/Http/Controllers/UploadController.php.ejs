@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
+class UploadController extends Controller
+{
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate(['file' => 'required|file|max:10240']);
+        $file = $request->file('file');
+        $path = $file->store('uploads', 's3');
+
+        return response()->json([
+            'key' => $path,
+            'url' => Storage::disk('s3')->temporaryUrl($path, now()->addHour()),
+        ]);
+    }
+
+    public function destroy(string $key): JsonResponse
+    {
+        Storage::disk('s3')->delete($key);
+        return response()->json(['message' => 'File deleted']);
+    }
+}

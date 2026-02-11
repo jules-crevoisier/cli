@@ -1,0 +1,55 @@
+<% if (orm === 'prisma') { %>
+// Prisma ORM — auto-generated client
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export default prisma;
+<% } %>
+<% if (orm !== 'prisma' && databases.includes('postgresql')) { %>
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export const postgres = pool;
+<% } -%>
+<% if (orm !== 'prisma' && databases.includes('mysql')) { %>
+import mysql from 'mysql2/promise';
+
+const mysqlPool = mysql.createPool({
+  host: process.env.MYSQL_HOST || 'localhost',
+  port: Number(process.env.MYSQL_PORT) || 3306,
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || 'root',
+  database: process.env.MYSQL_DATABASE || '<%= projectName.replace(/-/g, "_") %>',
+});
+
+export { mysqlPool as mysql };
+<% } -%>
+<% if (orm !== 'prisma' && databases.includes('sqlite')) { %>
+import Database from 'better-sqlite3';
+
+const db = new Database(process.env.SQLITE_PATH || './data/database.sqlite');
+db.pragma('journal_mode = WAL');
+
+export const sqlite = db;
+<% } -%>
+<% if (databases.includes('mongodb')) { %>
+import { MongoClient } from 'mongodb';
+
+const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017/<%= projectName.replace(/-/g, "_") %>');
+
+export const mongodb = client;
+export const mongoDb = client.db();
+<% } -%>
+<% if (databases.includes('redis')) { %>
+import { createClient } from 'redis';
+
+export const redis = createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
+});
+
+redis.on('error', (err: Error) => console.error('Redis Client Error', err));
+<% } -%>

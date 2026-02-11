@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+<% if (authStrategy === 'jwt') { %>
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+<% } %>
+
+class AuthController extends Controller
+{
+    public function register(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:8',
+            'name' => 'nullable|string',
+        ]);
+
+        $user = User::create([
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'name' => $request->name ?? '',
+        ]);
+
+        $userData = ['id' => $user->id, 'email' => $user->email, 'name' => $user->name, 'role' => $user->role ?? 'user'];
+
+<% if (authStrategy === 'jwt') { %>
+        $token = JWT::encode(
+            ['userId' => $user->id, 'email' => $user->email, 'role' => 'user', 'exp' => time() + 604800],
+            config('app.jwt_secret', 'change-me'),
+            'HS256'
+        );
+
+        return response()->json(['user' => $userData, 'token' => $token], 201);
+<% } else { %>
+        $request->session()->put('user', $userData);
+
+        return response()->json(['user' => $userData], 201);
+<% } %>
+    }
+
+    public function login(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        $userData = ['id' => $user->id, 'email' => $user->email, 'name' => $user->name, 'role' => $user->role ?? 'user'];
+
+<% if (authStrategy === 'jwt') { %>
+        $token = JWT::encode(
+            ['userId' => $user->id, 'email' => $user->email, 'role' => $user->role ?? 'user', 'exp' => time() + 604800],
+            config('app.jwt_secret', 'change-me'),
+            'HS256'
+        );
+
+        return response()->json(['user' => $userData, 'token' => $token]);
+<% } else { %>
+        $request->session()->put('user', $userData);
+
+        return response()->json(['user' => $userData]);
+<% } %>
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+<% if (authStrategy !== 'jwt') { %>
+        $request->session()->forget('user');
+        $request->session()->invalidate();
+<% } %>
+        return response()->json(['message' => 'Logged out']);
+    }
+
+    public function me(Request $request): JsonResponse
+    {
+<% if (authStrategy === 'jwt') { %>
+        $header = $request->header('Authorization');
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return response()->json(['error' => 'Not authenticated'], 401);
+        }
+        try {
+            $token = substr($header, 7);
+            $payload = JWT::decode($token, new Key(config('app.jwt_secret', 'change-me'), 'HS256'));
+            return response()->json(['userId' => $payload->userId, 'email' => $payload->email, 'role' => $payload->role]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+<% } else { %>
+        $user = $request->session()->get('user');
+        if (!$user) {
+            return response()->json(['error' => 'Not authenticated'], 401);
+        }
+        return response()->json($user);
+<% } %>
+    }
+}

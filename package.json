@@ -1,0 +1,56 @@
+{
+  "name": "letscraft",
+  "version": "0.1.2",
+  "description": "CLI scaffolding tool for modern web development projects with Docker",
+  "main": "dist/index.js",
+  "bin": {
+    "letscraft": "bin/cli.js"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "tsx scripts/test-local.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "cli",
+    "scaffold",
+    "docker",
+    "nextjs",
+    "react",
+    "vue",
+    "vite",
+    "express",
+    "devstack"
+  ],
+  "author": "",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "bin",
+    "src/templates",
+    "src/versions/defaults.json"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.2.0",
+    "chalk": "^4.1.2",
+    "commander": "^14.0.3",
+    "ejs": "^4.0.1",
+    "fs-extra": "^11.3.3",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/ejs": "^3.1.5",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^25.2.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

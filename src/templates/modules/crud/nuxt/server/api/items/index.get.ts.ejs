@@ -1,0 +1,59 @@
+import { defineEventHandler, getQuery } from 'h3'
+<% if (orm === 'prisma') { %>
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+<% } %>
+
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event)
+  const page = Number(query.page) || 1
+  const limit = Number(query.limit) || 20
+  const skip = (page - 1) * limit
+
+<% if (orm === 'prisma') { %>
+  const [items, total] = await Promise.all([
+    prisma.item.findMany({
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.item.count(),
+  ])
+
+  return {
+    items,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  }
+<% } else { %>
+  // TODO: Replace with your data source
+  const items = await getItems({ skip, limit })
+  const total = await getItemCount()
+
+  return {
+    items,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  }
+<% } %>
+})
+
+<% if (orm !== 'prisma') { %>
+// Placeholder: replace with your actual data source
+async function getItems(opts: { skip: number; limit: number }) {
+  return []
+}
+
+async function getItemCount() {
+  return 0
+}
+<% } %>

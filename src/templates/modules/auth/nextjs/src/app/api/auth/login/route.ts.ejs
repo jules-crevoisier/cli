@@ -1,0 +1,47 @@
+import { NextRequest, NextResponse } from "next/server";
+import { verifyPassword<% if (authStrategy === 'jwt') { %>, signToken<% } else { %>, setSession<% } %> } from "@/lib/auth";
+
+// In-memory store for demo — replace with your database
+const users = [
+  { id: "1", email: "admin@example.com", password: "$2a$12$LJ3c3gP0FJCBQ6RNww4E4.YLFAK0MFxjEn7LgrKmP7pHkfR/rD3Gu", name: "Admin", role: "admin" },
+];
+
+export async function POST(request: NextRequest) {
+  try {
+    const { email, password } = await request.json();
+
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    }
+
+    const user = users.find((u) => u.email === email);
+    if (!user) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    const valid = await verifyPassword(password, user.password);
+    if (!valid) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    const userData = { id: user.id, email: user.email, name: user.name, role: user.role };
+
+<% if (authStrategy === 'jwt') { %>
+    const token = signToken({ userId: user.id, email: user.email, role: user.role });
+    const response = NextResponse.json({ user: userData, token });
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+    return response;
+<% } else { %>
+    await setSession(userData);
+    return NextResponse.json({ user: userData });
+<% } %>
+  } catch {
+    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+  }
+}

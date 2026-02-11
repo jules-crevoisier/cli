@@ -1,0 +1,86 @@
+<template>
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <h2>Admin</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <NuxtLink to="/admin" class="nav-item" active-class="active" :exact="true">
+        <span class="nav-icon">&#9632;</span>
+        Dashboard
+      </NuxtLink>
+      <NuxtLink to="/admin/users" class="nav-item" active-class="active">
+        <span class="nav-icon">&#9644;</span>
+        Users
+      </NuxtLink>
+    </nav>
+    <div class="sidebar-footer">
+      <NuxtLink to="/" class="nav-item back-link">
+        &larr; Back to App
+      </NuxtLink>
+    </div>
+  </aside>
+</template>
+
+<script setup lang="ts">
+</script>
+
+<style scoped>
+.admin-sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background-color: #1a202c;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #2d3748;
+}
+
+.sidebar-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  color: #a0aec0;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-item:hover {
+  background-color: #2d3748;
+  color: white;
+}
+
+.nav-item.active {
+  background-color: #2d3748;
+  color: white;
+  border-right: 3px solid #3b82f6;
+}
+
+.nav-icon {
+  font-size: 0.875rem;
+}
+
+.sidebar-footer {
+  padding: 1rem 0;
+  border-top: 1px solid #2d3748;
+}
+
+.back-link {
+  font-size: 0.875rem;
+}
+</style>

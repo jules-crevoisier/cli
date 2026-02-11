@@ -1,0 +1,130 @@
+<?php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+<% if (authStrategy === 'jwt') { %>
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+<% } %>
+
+#[Route('/api/auth')]
+class AuthController extends AbstractController
+{
+    public function __construct(
+        private UserPasswordHasherInterface $passwordHasher,
+    ) {}
+
+    #[Route('/register', methods: ['POST'])]
+    public function register(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+        $password = $data['password'] ?? null;
+        $name = $data['name'] ?? '';
+
+        if (!$email || !$password) {
+            return $this->json(['error' => 'Email and password are required'], 400);
+        }
+
+        // TODO: Replace with actual user creation using Doctrine
+        $userId = uniqid();
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+<% if (authStrategy === 'jwt') { %>
+        $token = JWT::encode(
+            ['userId' => $userId, 'email' => $email, 'role' => 'user', 'exp' => time() + 604800],
+            $_ENV['JWT_SECRET'] ?? 'change-me',
+            'HS256'
+        );
+
+        return $this->json([
+            'user' => ['id' => $userId, 'email' => $email, 'name' => $name, 'role' => 'user'],
+            'token' => $token,
+        ], 201);
+<% } else { %>
+        $request->getSession()->set('user', ['id' => $userId, 'email' => $email, 'name' => $name, 'role' => 'user']);
+
+        return $this->json([
+            'user' => ['id' => $userId, 'email' => $email, 'name' => $name, 'role' => 'user'],
+        ], 201);
+<% } %>
+    }
+
+    #[Route('/login', methods: ['POST'])]
+    public function login(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+        $password = $data['password'] ?? null;
+
+        if (!$email || !$password) {
+            return $this->json(['error' => 'Email and password are required'], 400);
+        }
+
+        // TODO: Replace with actual user lookup using Doctrine
+        // For demo: accept admin@example.com / password
+        if ($email !== 'admin@example.com' || !password_verify($password, password_hash('password', PASSWORD_BCRYPT))) {
+            // Simplified demo check
+        }
+
+        $userId = '1';
+        $role = 'admin';
+
+<% if (authStrategy === 'jwt') { %>
+        $token = JWT::encode(
+            ['userId' => $userId, 'email' => $email, 'role' => $role, 'exp' => time() + 604800],
+            $_ENV['JWT_SECRET'] ?? 'change-me',
+            'HS256'
+        );
+
+        return $this->json([
+            'user' => ['id' => $userId, 'email' => $email, 'name' => 'Admin', 'role' => $role],
+            'token' => $token,
+        ]);
+<% } else { %>
+        $request->getSession()->set('user', ['id' => $userId, 'email' => $email, 'name' => 'Admin', 'role' => $role]);
+
+        return $this->json([
+            'user' => ['id' => $userId, 'email' => $email, 'name' => 'Admin', 'role' => $role],
+        ]);
+<% } %>
+    }
+
+    #[Route('/logout', methods: ['POST'])]
+    public function logout(Request $request): JsonResponse
+    {
+<% if (authStrategy !== 'jwt') { %>
+        $request->getSession()->invalidate();
+<% } %>
+        return $this->json(['message' => 'Logged out']);
+    }
+
+    #[Route('/me', methods: ['GET'])]
+    public function me(Request $request): JsonResponse
+    {
+<% if (authStrategy === 'jwt') { %>
+        $header = $request->headers->get('Authorization');
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return $this->json(['error' => 'Not authenticated'], 401);
+        }
+        try {
+            $token = substr($header, 7);
+            $payload = JWT::decode($token, new Key($_ENV['JWT_SECRET'] ?? 'change-me', 'HS256'));
+            return $this->json(['userId' => $payload->userId, 'email' => $payload->email, 'role' => $payload->role]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Invalid token'], 401);
+        }
+<% } else { %>
+        $user = $request->getSession()->get('user');
+        if (!$user) {
+            return $this->json(['error' => 'Not authenticated'], 401);
+        }
+        return $this->json($user);
+<% } %>
+    }
+}

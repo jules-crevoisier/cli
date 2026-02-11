@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Security;
+
+<% if (authStrategy === 'jwt') { %>
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+
+class JwtAuthenticator extends AbstractAuthenticator
+{
+    public function supports(Request $request): ?bool
+    {
+        return $request->headers->has('Authorization');
+    }
+
+    public function authenticate(Request $request): Passport
+    {
+        $header = $request->headers->get('Authorization');
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            throw new AuthenticationException('Missing Bearer token');
+        }
+
+        $token = substr($header, 7);
+        try {
+            $payload = JWT::decode($token, new Key($_ENV['JWT_SECRET'] ?? 'change-me', 'HS256'));
+            return new SelfValidatingPassport(new UserBadge($payload->email));
+        } catch (\Exception $e) {
+            throw new AuthenticationException('Invalid JWT token');
+        }
+    }
+
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    {
+        return null; // Let the request continue
+    }
+
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+    {
+        return new JsonResponse(['error' => $exception->getMessage()], 401);
+    }
+}
+<% } else { %>
+// Session-based authentication is handled by Symfony's built-in session system.
+// See config/packages/security.yaml for configuration.
+<% } %>

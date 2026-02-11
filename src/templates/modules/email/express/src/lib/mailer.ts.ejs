@@ -1,0 +1,18 @@
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+  host: process.env.MAIL_HOST || "localhost",
+  port: Number(process.env.MAIL_PORT) || 1025,
+  secure: false,
+});
+
+export interface SendMailOptions {
+  to: string;
+  subject: string;
+  html: string;
+}
+
+export async function sendMail({ to, subject, html }: SendMailOptions) {
+  const from = process.env.MAIL_FROM || "noreply@localhost";
+  return transporter.sendMail({ from, to, subject, html });
+}

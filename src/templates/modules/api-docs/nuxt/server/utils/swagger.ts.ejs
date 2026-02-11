@@ -1,0 +1,55 @@
+interface OpenAPISpec {
+  openapi: string;
+  info: {
+    title: string;
+    version: string;
+    description?: string;
+  };
+  servers: Array<{ url: string; description?: string }>;
+  paths: Record<string, any>;
+}
+
+export function buildSwaggerSpec(): OpenAPISpec {
+  const config = useRuntimeConfig();
+
+  const spec: OpenAPISpec = {
+    openapi: '3.0.3',
+    info: {
+      title: config.public?.appName || '<%= projectName %>',
+      version: '1.0.0',
+      description: 'Auto-generated API documentation',
+    },
+    servers: [
+      {
+        url: '/api',
+        description: 'API server',
+      },
+    ],
+    paths: {
+      '/health': {
+        get: {
+          summary: 'Health check',
+          operationId: 'getHealth',
+          responses: {
+            '200': {
+              description: 'Service is healthy',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      status: { type: 'string', example: 'ok' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
+  return spec;
+}

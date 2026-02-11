@@ -1,0 +1,407 @@
+# <%= projectName %>
+
+<% if (stack === 'nextjs') { -%>
+Full-stack web application built with **Next.js** and **React**.
+<% } else if (stack === 'vite-react') { -%>
+Single-page application built with **Vite** and **React**.
+<% } else if (stack === 'nuxt') { -%>
+Full-stack web application built with **Nuxt** and **Vue**.
+<% } else if (stack === 'vite-react-express') { -%>
+Full-stack web application with **Vite + React** frontend and **Express** backend.
+<% } else if (stack === 'express') { -%>
+Backend API built with **Express.js**.
+<% } else if (stack === 'symfony') { -%>
+Full-stack PHP application built with **Symfony**.
+<% } else if (stack === 'laravel') { -%>
+Full-stack PHP application built with **Laravel**.
+<% } -%>
+
+> Generated with [letscraft](https://github.com/letscraft-cli/letscraft)
+
+## Tech Stack
+
+| Technology | Version |
+|---|---|
+<% if (stack === 'nextjs') { -%>
+| Next.js | <%= versions.nextjs %> |
+| React | <%= versions.react %> |
+<% } else if (stack === 'vite-react') { -%>
+| Vite | <%= versions.vite %> |
+| React | <%= versions.react %> |
+<% } else if (stack === 'nuxt') { -%>
+| Nuxt | <%= versions.nuxt %> |
+| Vue | 3.5 |
+<% } else if (stack === 'vite-react-express') { -%>
+| Vite | <%= versions.vite %> |
+| React | <%= versions.react %> |
+| Express | <%= versions.express %> |
+<% } else if (stack === 'express') { -%>
+| Express.js | <%= versions.express %> |
+<% } else if (stack === 'symfony') { -%>
+| Symfony | <%= versions.symfony %> |
+| PHP | <%= versions.php %> |
+<% } else if (stack === 'laravel') { -%>
+| Laravel | <%= versions.laravel %> |
+| PHP | <%= versions.php %> |
+<% } -%>
+<% if (['nextjs', 'vite-react', 'nuxt', 'vite-react-express', 'express'].includes(stack)) { -%>
+| Node.js | >= <%= versions.node %> |
+<% if (typescript) { -%>
+| TypeScript | <%= versions.typescript %> |
+<% } -%>
+<% if (['nextjs', 'vite-react', 'nuxt', 'vite-react-express'].includes(stack)) { -%>
+| Tailwind CSS | <%= versions.tailwind %> |
+<% } -%>
+<% } -%>
+<% if (orm === 'prisma') { -%>
+| Prisma | 6 |
+<% } else if (orm === 'doctrine') { -%>
+| Doctrine ORM | 3 |
+<% } else if (orm === 'eloquent') { -%>
+| Eloquent ORM | built-in |
+<% } -%>
+<% for (const db of databases) { -%>
+<% if (db === 'postgresql') { -%>
+| PostgreSQL | <%= versions.databases.postgresql %> |
+<% } else if (db === 'mongodb') { -%>
+| MongoDB | <%= versions.databases.mongodb %> |
+<% } else if (db === 'mysql') { -%>
+| MySQL | <%= versions.databases.mysql %> |
+<% } else if (db === 'redis') { -%>
+| Redis | <%= versions.databases.redis %> |
+<% } else if (db === 'sqlite') { -%>
+| SQLite | file-based |
+<% } -%>
+<% } -%>
+
+## Prerequisites
+
+<% if (['nextjs', 'vite-react', 'nuxt', 'vite-react-express', 'express'].includes(stack)) { -%>
+- [Node.js](https://nodejs.org/) >= <%= versions.node %>
+- npm (included with Node.js)
+<% if (databases.length > 0 || mailer) { -%>
+- [Docker](https://www.docker.com/) and Docker Compose (for databases and services)
+<% } -%>
+<% } else { -%>
+- [Docker](https://www.docker.com/) and Docker Compose
+<% } -%>
+
+## Getting Started
+
+<% if (stack === 'vite-react-express') { -%>
+```bash
+# Install all dependencies (root + client + server)
+npm install
+npm run install:all
+<% if (databases.length > 0 || mailer) { %>
+# Start Docker services (databases<%= mailer ? ', mailer' : '' %>)
+docker compose up -d
+<% } -%>
+<% if (orm === 'prisma') { %>
+# Generate Prisma client + run migrations (in server/)
+cd server && npx prisma generate && npx prisma migrate dev && cd ..
+<% } -%>
+
+# Start both client and server in development mode
+npm run dev
+```
+
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- Backend API: [http://localhost:4000](http://localhost:4000)
+- The Vite dev server proxies `/api` requests to the Express backend.
+<% } else if (['nextjs', 'vite-react', 'nuxt', 'express'].includes(stack)) { -%>
+```bash
+# Install dependencies
+npm install
+<% if (databases.length > 0 || mailer) { %>
+# Start Docker services (databases<%= mailer ? ', mailer' : '' %>)
+docker compose up -d
+<% } -%>
+<% if (orm === 'prisma') { %>
+# Generate Prisma client + run migrations
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed
+<% } -%>
+
+# Start the development server
+npm run dev
+```
+
+<% if (stack === 'nextjs' || stack === 'nuxt') { -%>
+Open [http://localhost:<%= port %>](http://localhost:<%= port %>) in your browser.
+<% } else if (stack === 'vite-react') { -%>
+Open [http://localhost:<%= port %>](http://localhost:<%= port %>) in your browser.
+<% } else if (stack === 'express') { -%>
+The API will be available at [http://localhost:<%= port %>](http://localhost:<%= port %>).
+Health check: [http://localhost:<%= port %>/api/health](http://localhost:<%= port %>/api/health)
+<% } -%>
+<% } else if (stack === 'symfony') { -%>
+```bash
+# Start all services with hot-reload
+docker compose up --watch
+```
+
+Open [http://localhost:<%= port %>](http://localhost:<%= port %>) in your browser.
+
+### Useful Commands
+
+```bash
+# Run Symfony console commands
+docker compose exec app php bin/console ...
+
+# Run database migrations
+docker compose exec app php bin/console doctrine:migrations:migrate
+
+# Install a Composer package
+docker compose exec app composer require <package>
+```
+<% } else if (stack === 'laravel') { -%>
+```bash
+# Start all services with hot-reload
+docker compose up --watch
+```
+
+Open [http://localhost:<%= port %>](http://localhost:<%= port %>) in your browser.
+
+### Useful Commands
+
+```bash
+# Run Artisan commands
+docker compose exec app php artisan ...
+
+# Run database migrations
+docker compose exec app php artisan migrate
+
+# Seed the database
+docker compose exec app php artisan db:seed
+
+# Install a Composer package
+docker compose exec app composer require <package>
+```
+<% } -%>
+
+## Available Scripts
+
+<% if (stack === 'vite-react-express') { -%>
+| Command | Description |
+|---|---|
+| `npm run dev` | Start both client and server with hot-reload |
+| `npm run dev:client` | Start client only |
+| `npm run dev:server` | Start server only |
+| `npm run build` | Build client and server for production |
+| `npm start` | Start production server |
+<% if (eslintPrettier) { -%>
+| `npm run lint` | Run ESLint on client and server |
+| `npm run format` | Format code with Prettier |
+<% } -%>
+<% } else if (['nextjs', 'vite-react', 'nuxt', 'express'].includes(stack)) { -%>
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server with hot-reload |
+| `npm run build` | Build for production |
+<% if (stack === 'nextjs' || stack === 'express') { -%>
+| `npm start` | Start production server |
+<% } -%>
+<% if (stack === 'vite-react') { -%>
+| `npm run preview` | Preview production build locally |
+<% } -%>
+<% if (stack === 'nuxt') { -%>
+| `npm run generate` | Generate static site |
+| `npm run preview` | Preview production build locally |
+<% } -%>
+<% if (eslintPrettier) { -%>
+| `npm run lint` | Run ESLint |
+| `npm run format` | Format code with Prettier |
+<% } -%>
+<% if (stack === 'express') { -%>
+| `npm run test` | Run tests with Vitest |
+<% } -%>
+<% if (orm === 'prisma') { -%>
+| `npm run db:migrate` | Run Prisma migrations |
+| `npm run db:seed` | Seed the database |
+| `npm run db:studio` | Open Prisma Studio (visual DB editor) |
+<% } -%>
+<% } -%>
+
+<% if (databases.length > 0) { -%>
+## Database
+
+<% if (['nextjs', 'vite-react', 'nuxt', 'vite-react-express', 'express'].includes(stack)) { -%>
+Databases run in Docker containers. The app connects via `localhost` (ports are exposed to the host).
+<% } else { -%>
+The app uses Docker service names as hostnames for database connections.
+<% } -%>
+
+Check `.env` for connection details.
+
+<% if (databases.length > 0) { -%>
+| Database | Port |
+|---|---|
+<% for (const db of databases) { -%>
+<% if (db === 'postgresql') { -%>
+| PostgreSQL | 5432 |
+<% } else if (db === 'mongodb') { -%>
+| MongoDB | 27017 |
+<% } else if (db === 'mysql') { -%>
+| MySQL | 3306 |
+<% } else if (db === 'redis') { -%>
+| Redis | 6379 |
+<% } else if (db === 'sqlite') { -%>
+| SQLite | file: `./data/database.sqlite` |
+<% } -%>
+<% } -%>
+<% } -%>
+<% } -%>
+
+<% if (mailer) { -%>
+## Email Testing (Mailpit)
+
+[Mailpit](https://github.com/axllent/mailpit) captures all outgoing emails for local testing. No emails are actually sent externally.
+
+- **SMTP**: `localhost:1025`
+- **Web UI**: [http://localhost:8025](http://localhost:8025)
+
+Check `.env` for `MAIL_HOST` and `MAIL_PORT` configuration.
+
+<% } -%>
+<% if (modules.length > 0) { -%>
+## Modules
+
+<% const moduleLabels = { auth: 'Authentication', crud: 'CRUD API', admin: 'Admin Dashboard', 'file-upload': 'File Upload', email: 'Transactional Email', 'api-docs': 'API Documentation', i18n: 'Internationalization', 'dark-mode': 'Dark Mode', 'ci-cd': 'CI/CD' }; -%>
+This project includes the following modules:
+
+| Module | Description |
+|---|---|
+<% for (const mod of modules) { -%>
+| **<%= moduleLabels[mod] || mod %>** | Pre-configured and ready to use |
+<% } -%>
+
+<% if (modules.includes('auth')) { -%>
+### Authentication
+
+Strategy: **<%= authStrategy === 'session' ? 'Session (cookie-based)' : 'JWT (stateless)' %>**
+<% if (['express', 'nextjs', 'nuxt', 'vite-react-express'].includes(stack)) { -%>
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/auth/register` | POST | Create account |
+| `/api/auth/login` | POST | Login |
+| `/api/auth/logout` | POST | Logout |
+| `/api/auth/me` | GET | Current user |
+<% } -%>
+
+<% } -%>
+<% if (modules.includes('crud')) { -%>
+### CRUD API
+
+Example CRUD endpoints for an `Item` resource.
+<% if (['express', 'nextjs', 'nuxt', 'vite-react-express'].includes(stack)) { -%>
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/items` | GET | List all items |
+| `/api/items/:id` | GET | Get item by ID |
+| `/api/items` | POST | Create item |
+| `/api/items/:id` | PUT | Update item |
+| `/api/items/:id` | DELETE | Delete item |
+<% } -%>
+
+<% } -%>
+<% } -%>
+## Environment Variables
+
+Copy `.env.example` to `.env` and adjust values as needed:
+
+```bash
+cp .env.example .env
+```
+
+See `.env.example` for all available configuration options.
+
+## Project Structure
+
+```
+<%= projectName %>/
+<% if (stack === 'nextjs') { -%>
+├── src/
+│   ├── app/          # Next.js App Router pages & layouts
+│   └── lib/          # Shared utilities & database
+├── public/            # Static assets
+<% if (orm === 'prisma') { -%>
+├── prisma/            # Prisma schema & migrations
+<% } -%>
+<% } else if (stack === 'vite-react') { -%>
+├── src/
+│   ├── App.tsx        # Root React component
+│   ├── main.tsx       # Entry point
+│   └── lib/           # Shared utilities
+├── public/            # Static assets
+<% if (orm === 'prisma') { -%>
+├── prisma/            # Prisma schema & migrations
+<% } -%>
+<% } else if (stack === 'nuxt') { -%>
+├── app.vue            # Root component
+├── pages/             # File-based routing
+├── server/
+│   ├── api/           # Server API routes (Nitro)
+│   └── utils/         # Server utilities
+├── composables/       # Vue composables
+├── components/        # Vue components
+├── assets/css/        # Global styles (Tailwind)
+├── public/            # Static assets
+<% if (orm === 'prisma') { -%>
+├── prisma/            # Prisma schema & migrations
+<% } -%>
+<% } else if (stack === 'vite-react-express') { -%>
+├── client/            # Vite + React frontend
+│   ├── src/
+│   │   ├── App.tsx    # Root React component
+│   │   └── main.tsx   # Entry point
+│   └── vite.config.ts # Vite config (proxy /api → Express)
+├── server/            # Express backend
+│   ├── src/
+│   │   ├── index.ts   # Express entry point
+│   │   └── routes/    # API route handlers
+│   └── tests/         # Backend tests
+<% if (orm === 'prisma') { -%>
+├── server/prisma/     # Prisma schema & migrations
+<% } -%>
+<% } else if (stack === 'express') { -%>
+├── src/
+│   ├── index.ts       # Express app entry point
+│   ├── routes/        # API route handlers
+│   ├── middleware/     # Express middleware
+│   └── lib/           # Shared utilities & database
+├── tests/             # Test files
+<% if (orm === 'prisma') { -%>
+├── prisma/            # Prisma schema & migrations
+<% } -%>
+<% } else if (stack === 'symfony') { -%>
+├── src/
+│   ├── Controller/    # Route controllers
+│   ├── Entity/        # Doctrine entities
+│   └── Kernel.php     # App kernel
+├── config/            # Configuration files
+├── public/            # Web root
+<% } else if (stack === 'laravel') { -%>
+├── app/
+│   ├── Models/        # Eloquent models
+│   └── Providers/     # Service providers
+├── config/            # Configuration files
+├── database/          # Migrations & seeders
+├── public/            # Web root
+├── routes/            # Route definitions
+<% } -%>
+├── .env               # Environment variables (not committed)
+├── .env.example       # Environment template
+<% if (['nextjs', 'vite-react', 'nuxt', 'vite-react-express', 'express'].includes(stack) && eslintPrettier) { -%>
+├── eslint.config.js   # ESLint 9 flat config
+├── .prettierrc        # Prettier config
+<% } -%>
+└── agent.md           # AI assistant instructions
+```
+
+## License
+
+Private project.

@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+import "./globals.css";
+<% if (modules.includes('dark-mode')) { -%>
+import { ThemeProvider } from "@/components/ThemeProvider";
+<% } -%>
+
+export const metadata: Metadata = {
+  title: "<%= projectName %>",
+  description: "Created with letscraft",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en"<% if (modules.includes('dark-mode')) { %> suppressHydrationWarning<% } %>>
+      <body<% if (modules.includes('dark-mode')) { %> className="bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100"<% } %>>
+<% if (modules.includes('dark-mode')) { -%>
+        <ThemeProvider>{children}</ThemeProvider>
+<% } else { -%>
+        {children}
+<% } -%>
+      </body>
+    </html>
+  );
+}

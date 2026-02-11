@@ -1,0 +1,9 @@
+<?php
+
+use App\Http\Controllers\UploadController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('api/upload')->group(function () {
+    Route::post('/', [UploadController::class, 'store']);
+    Route::delete('/{key}', [UploadController::class, 'destroy']);
+});

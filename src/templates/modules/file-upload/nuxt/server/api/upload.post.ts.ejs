@@ -1,0 +1,51 @@
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { randomUUID } from 'crypto';
+import { getS3Client } from '../utils/storage';
+
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
+  const formData = await readMultipartFormData(event);
+
+  if (!formData || formData.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'No file provided',
+    });
+  }
+
+  const file = formData[0];
+
+  if (!file.filename || !file.data) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid file upload',
+    });
+  }
+
+  const ext = file.filename.split('.').pop() || 'bin';
+  const key = `uploads/${randomUUID()}.${ext}`;
+  const s3 = getS3Client();
+
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: config.s3Bucket,
+        Key: key,
+        Body: file.data,
+        ContentType: file.type || 'application/octet-stream',
+      })
+    );
+
+    return {
+      success: true,
+      key,
+      filename: file.filename,
+      size: file.data.length,
+    };
+  } catch (err: any) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: `Upload failed: ${err.message}`,
+    });
+  }
+});

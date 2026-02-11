@@ -1,0 +1,43 @@
+import { defineEventHandler, readBody, createError } from 'h3'
+<% if (orm === 'prisma') { %>
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+<% } %>
+
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event)
+
+  if (!body.title) {
+    throw createError({
+      statusCode: 400,
+      message: 'Title is required.',
+    })
+  }
+
+<% if (orm === 'prisma') { %>
+  const item = await prisma.item.create({
+    data: {
+      title: body.title,
+      description: body.description || null,
+    },
+  })
+
+  return { item }
+<% } else { %>
+  // TODO: Replace with your data source
+  const item = await createItem({
+    title: body.title,
+    description: body.description || null,
+  })
+
+  return { item }
+<% } %>
+})
+
+<% if (orm !== 'prisma') { %>
+// Placeholder: replace with your actual data source
+async function createItem(data: { title: string; description: string | null }) {
+  return { id: 'generated-id', ...data, createdAt: new Date() }
+}
+<% } %>

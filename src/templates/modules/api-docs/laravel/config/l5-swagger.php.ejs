@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'default' => 'default',
+    'documentations' => [
+        'default' => [
+            'api' => [
+                'title' => 'API Documentation',
+            ],
+            'routes' => [
+                'api' => 'api/documentation',
+            ],
+        ],
+    ],
+    'defaults' => [
+        'routes' => [
+            'docs' => 'docs',
+            'oauth2_callback' => 'api/oauth2-callback',
+            'middleware' => [
+                'api' => [],
+                'asset' => [],
+                'docs' => [],
+                'oauth2_callback' => [],
+            ],
+        ],
+    ],
+];

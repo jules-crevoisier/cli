@@ -1,0 +1,49 @@
+import { NextRequest, NextResponse } from "next/server";
+import { hashPassword<% if (authStrategy === 'jwt') { %>, signToken<% } else { %>, setSession<% } %> } from "@/lib/auth";
+
+// In-memory store for demo — replace with your database
+const users: Array<{ id: string; email: string; password: string; name: string; role: string }> = [];
+
+export async function POST(request: NextRequest) {
+  try {
+    const { email, password, name } = await request.json();
+
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    }
+
+    if (users.find((u) => u.email === email)) {
+      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+    }
+
+    const hashedPassword = await hashPassword(password);
+    const user = {
+      id: String(users.length + 1),
+      email,
+      password: hashedPassword,
+      name: name || "",
+      role: "user",
+    };
+    users.push(user);
+
+    const userData = { id: user.id, email: user.email, name: user.name, role: user.role };
+
+<% if (authStrategy === 'jwt') { %>
+    const token = signToken({ userId: user.id, email: user.email, role: user.role });
+    const response = NextResponse.json({ user: userData, token }, { status: 201 });
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+    return response;
+<% } else { %>
+    await setSession(userData);
+    return NextResponse.json({ user: userData }, { status: 201 });
+<% } %>
+  } catch {
+    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
+  }
+}

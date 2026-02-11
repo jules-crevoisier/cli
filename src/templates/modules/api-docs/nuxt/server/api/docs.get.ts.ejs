@@ -1,0 +1,9 @@
+import { buildSwaggerSpec } from '../utils/swagger';
+
+export default defineEventHandler(async (event) => {
+  const spec = buildSwaggerSpec();
+
+  setResponseHeader(event, 'Content-Type', 'application/json');
+
+  return spec;
+});
