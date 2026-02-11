@@ -11,12 +11,19 @@ node_modules/
 
 # Build
 dist/
+*.tsbuildinfo
 
-# Lock (optional: remove if you want to commit package-lock.json)
-# package-lock.json
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.turbo/
 
 # IDE / local
 .claude/
+.vscode/
 *.log
 .env
 .env.*
