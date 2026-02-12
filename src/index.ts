@@ -79,4 +79,6 @@ program
     }
   });
 
+program.addHelpCommand('help', 'Display help for letscraft');
+
 program.parse();

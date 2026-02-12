@@ -209,6 +209,7 @@ Toggle de theme avec :
 
 ```
 Options :
+  -V, --version            Afficher la version
   --stack <type>           Stack : nextjs, nuxt, vite-react, vite-react-express, express, symfony, laravel
   --db <list>              Bases de donnees (separees par virgule) : postgresql, mongodb, mysql, redis, sqlite
   --orm <type>             ORM : prisma, none
@@ -220,7 +221,23 @@ Options :
   --no-eslint              Desactiver ESLint + Prettier (stacks JS)
   --check-updates          Verifier les dernieres versions des frameworks
   -y, --yes                Accepter tous les defauts (mode non-interactif)
+  -h, --help               Afficher l'aide
+
+Commandes :
+  help                     Afficher l'aide
+  list                     Lister les projets crees avec letscraft
+  update                   Mettre a jour letscraft
 ```
+
+### Commande `help`
+
+```bash
+letscraft help
+letscraft --help
+letscraft -h
+```
+
+Affiche l'aide avec toutes les options et commandes disponibles.
 
 ### Commande `list`
 
