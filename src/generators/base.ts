@@ -10,6 +10,7 @@ import { renderTemplateToFile } from '../utils/template';
 import { isJsStack, getDbHost, getServiceHost, getPrismaProvider } from '../utils/stacks';
 import { registerProject } from '../registry';
 import { generateModuleFiles } from '../modules/generator';
+import { STACK_LABELS } from '../constants';
 import { NextjsGenerator } from './nextjs';
 import { ViteReactGenerator } from './vite-react';
 import { NuxtGenerator } from './nuxt';
@@ -49,6 +50,26 @@ export async function createProject(options: ProjectOptions): Promise<void> {
   const ctx: GeneratorContext = { options, versions, outputDir };
   const generator = getGenerator(options.stack);
   const port = getPortForStack(options.stack);
+
+  try {
+    await generateProjectFiles(ctx, generator, port, options, versions, outputDir);
+  } catch (error) {
+    // Rollback: remove partially created directory on failure
+    if (await fs.pathExists(outputDir)) {
+      await fs.remove(outputDir);
+    }
+    throw error;
+  }
+}
+
+async function generateProjectFiles(
+  ctx: GeneratorContext,
+  generator: StackGenerator,
+  port: number,
+  options: ProjectOptions,
+  versions: import('../types').VersionConfig,
+  outputDir: string
+): Promise<void> {
 
   // Build dbHost map based on stack type (localhost for JS, Docker service names for PHP)
   const dbHost: Record<string, string> = {};
@@ -116,23 +137,14 @@ export async function createProject(options: ProjectOptions): Promise<void> {
   if (needsDocker) {
     spinner.start('Generating Docker configuration...');
 
-    if (isJsStack(options.stack)) {
-      // JS: docker-compose with DB services only + production Dockerfile
-      const composeContent = generateDockerCompose(ctx);
-      const dockerfileContent = await generateDockerfile(ctx);
-      await Promise.all([
-        fs.writeFile(path.join(outputDir, 'docker-compose.yml'), composeContent),
-        fs.writeFile(path.join(outputDir, 'Dockerfile'), dockerfileContent),
-      ]);
-    } else {
-      // PHP: docker-compose with app + DB services
-      const composeContent = generateDockerCompose(ctx);
-      const dockerfileContent = await generateDockerfile(ctx);
-      await Promise.all([
-        fs.writeFile(path.join(outputDir, 'docker-compose.yml'), composeContent),
-        fs.writeFile(path.join(outputDir, 'Dockerfile'), dockerfileContent),
-      ]);
-    }
+    // Both JS and PHP stacks generate docker-compose.yml + Dockerfile
+    // (the content differs internally via generateDockerCompose/generateDockerfile)
+    const composeContent = generateDockerCompose(ctx);
+    const dockerfileContent = await generateDockerfile(ctx);
+    await Promise.all([
+      fs.writeFile(path.join(outputDir, 'docker-compose.yml'), composeContent),
+      fs.writeFile(path.join(outputDir, 'Dockerfile'), dockerfileContent),
+    ]);
 
     spinner.succeed('Docker configuration generated');
   }
@@ -161,18 +173,10 @@ export async function createProject(options: ProjectOptions): Promise<void> {
   }
 
   // Step 5: Stack-specific files
-  const stackNames: Record<string, string> = {
-    nextjs: 'Next.js',
-    'vite-react': 'Vite + React',
-    nuxt: 'Nuxt',
-    'vite-react-express': 'Vite + React + Express',
-    express: 'Express',
-    symfony: 'Symfony',
-    laravel: 'Laravel',
-  };
-  spinner.start(`Generating ${stackNames[options.stack]} project files...`);
+  const stackLabel = STACK_LABELS[options.stack] || options.stack;
+  spinner.start(`Generating ${stackLabel} project files...`);
   await generator.generate(ctx);
-  spinner.succeed(`${stackNames[options.stack]} project files generated`);
+  spinner.succeed(`${stackLabel} project files generated`);
 
   // Step 6: Module files
   if (options.modules.length > 0) {
@@ -194,7 +198,10 @@ export async function createProject(options: ProjectOptions): Promise<void> {
   // Step 8: Register project
   try {
     registerProject(options, outputDir);
-  } catch {
+  } catch (error) {
     // Non-critical: don't fail project creation if registry fails
+    console.warn(
+      `Warning: Could not register project: ${error instanceof Error ? error.message : 'unknown error'}`
+    );
   }
 }

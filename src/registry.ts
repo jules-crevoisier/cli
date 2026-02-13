@@ -3,6 +3,8 @@ import os from 'os';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import type { ProjectRegistry, ProjectRegistryEntry, ProjectOptions } from './types';
+import { logger } from './utils/logger';
+import { SERVICE_LABELS, MODULE_LABELS } from './constants';
 
 const REGISTRY_DIR = path.join(os.homedir(), '.letscraft');
 const REGISTRY_FILE = path.join(REGISTRY_DIR, 'projects.json');
@@ -12,8 +14,10 @@ function getRegistry(): ProjectRegistry {
     if (fs.existsSync(REGISTRY_FILE)) {
       return fs.readJsonSync(REGISTRY_FILE) as ProjectRegistry;
     }
-  } catch {
-    // Corrupted file, start fresh
+  } catch (error) {
+    logger.warn(
+      `Could not read project registry at ${REGISTRY_FILE}: ${error instanceof Error ? error.message : 'unknown error'}. Starting with empty registry.`
+    );
   }
   return { projects: [] };
 }
@@ -84,29 +88,12 @@ export function listProjects(): void {
     }
 
     if (project.services && project.services.length > 0) {
-      const serviceLabels: Record<string, string> = {
-        mailpit: 'Mailpit',
-        minio: 'MinIO',
-        rabbitmq: 'RabbitMQ',
-        adminer: 'Adminer',
-      };
-      const labels = project.services.map((s) => serviceLabels[s] || s).join(', ');
+      const labels = project.services.map((s) => SERVICE_LABELS[s] || s).join(', ');
       console.log(`    ${chalk.gray('Services:')} ${labels}`);
     }
 
     if (project.modules && project.modules.length > 0) {
-      const moduleLabels: Record<string, string> = {
-        auth: 'Auth',
-        crud: 'CRUD',
-        admin: 'Admin',
-        'file-upload': 'File Upload',
-        email: 'Email',
-        'api-docs': 'API Docs',
-        i18n: 'i18n',
-        'dark-mode': 'Dark Mode',
-        'ci-cd': 'CI/CD',
-      };
-      const labels = project.modules.map((m) => moduleLabels[m] || m).join(', ');
+      const labels = project.modules.map((m) => MODULE_LABELS[m] || m).join(', ');
       console.log(`    ${chalk.gray('Modules:')} ${labels}`);
     }
 

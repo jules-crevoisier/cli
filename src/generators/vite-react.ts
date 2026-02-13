@@ -18,7 +18,9 @@ export class ViteReactGenerator implements StackGenerator {
       fs.ensureDir(path.join(outputDir, 'public')),
     ]);
 
-    const tasks: Promise<void>[] = [
+    // Note: No db.ts generated here — Vite+React is a client-side SPA,
+    // database connections must be handled by a separate backend.
+    await Promise.all([
       renderTemplateToFile('vite-react/package.json.ejs', path.join(outputDir, 'package.json'), data),
       renderTemplateToFile('vite-react/vite.config.ts.ejs', path.join(outputDir, 'vite.config.ts'), data),
       renderTemplateToFile('vite-react/tsconfig.json.ejs', path.join(outputDir, 'tsconfig.json'), data),
@@ -26,14 +28,6 @@ export class ViteReactGenerator implements StackGenerator {
       renderTemplateToFile('vite-react/src/main.tsx.ejs', path.join(outputDir, 'src', 'main.tsx'), data),
       renderTemplateToFile('vite-react/src/App.tsx.ejs', path.join(outputDir, 'src', 'App.tsx'), data),
       renderTemplateToFile('vite-react/src/index.css.ejs', path.join(outputDir, 'src', 'index.css'), data),
-    ];
-
-    if (options.databases.length > 0) {
-      tasks.push(
-        renderTemplateToFile('vite-react/src/lib/db.ts.ejs', path.join(outputDir, 'src', 'lib', 'db.ts'), data)
-      );
-    }
-
-    await Promise.all(tasks);
+    ]);
   }
 }

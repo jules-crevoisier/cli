@@ -29,6 +29,9 @@ coverage/
 .env.*
 !.env.example
 
+# Scratch/utility files
+_*.js
+
 # OS
 .DS_Store
 Thumbs.db

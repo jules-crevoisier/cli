@@ -4,15 +4,14 @@ import { createProject } from './generators/base';
 import { checkVersions } from './versions/checker';
 import { logger } from './utils/logger';
 import { isJsStack } from './utils/stacks';
-
-const packageJson = require('../package.json');
+import { CLI_VERSION } from './version';
 
 const program = new Command();
 
 program
   .name('letscraft')
   .description('Scaffold modern web development projects with Docker')
-  .version(packageJson.version);
+  .version(CLI_VERSION);
 
 // Default command: create a project
 program

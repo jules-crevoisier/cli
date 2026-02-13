@@ -1,13 +1,12 @@
 import { execSync } from 'child_process';
 import chalk from 'chalk';
-
-const packageJson = require('../package.json');
+import { CLI_VERSION } from './version';
 
 /**
  * Check the latest version on npm and update if needed
  */
 export async function updateCli(): Promise<void> {
-  const currentVersion = packageJson.version;
+  const currentVersion = CLI_VERSION;
 
   console.log('');
   console.log(chalk.bold.cyan('  letscraft — Update'));
@@ -49,9 +48,13 @@ export async function updateCli(): Promise<void> {
     console.log('');
     console.log(chalk.green.bold('  ✔ Updated successfully!') + ` ${currentVersion} → ${latestVersion}`);
     console.log('');
-  } catch {
+  } catch (error) {
     console.log('');
-    console.log(chalk.yellow('  Could not update automatically. Try running manually:'));
+    console.log(chalk.yellow('  Could not update automatically.'));
+    if (error instanceof Error && error.message) {
+      console.log(chalk.gray(`  Reason: ${error.message}`));
+    }
+    console.log(chalk.yellow('  Try running manually:'));
     console.log(chalk.cyan('    npm install -g letscraft@latest'));
     console.log('');
   }

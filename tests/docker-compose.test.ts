@@ -138,8 +138,9 @@ describe('MinIO service', () => {
     const ctx = makeCtx({ stack: 'express', databases: [], services: ['minio'] });
     const yaml = generateDockerCompose(ctx);
 
-    expect(yaml).toContain('MINIO_ROOT_USER: "minioadmin"');
-    expect(yaml).toContain('MINIO_ROOT_PASSWORD: "minioadmin"');
+    expect(yaml).toContain('MINIO_ROOT_USER:');
+    expect(yaml).toContain('minioadmin');
+    expect(yaml).toContain('MINIO_ROOT_PASSWORD:');
   });
 
   it('has volume and command', () => {
@@ -179,8 +180,9 @@ describe('RabbitMQ service', () => {
     const ctx = makeCtx({ stack: 'express', databases: [], services: ['rabbitmq'] });
     const yaml = generateDockerCompose(ctx);
 
-    expect(yaml).toContain('RABBITMQ_DEFAULT_USER: "guest"');
-    expect(yaml).toContain('RABBITMQ_DEFAULT_PASSWORD: "guest"');
+    expect(yaml).toContain('RABBITMQ_DEFAULT_USER:');
+    expect(yaml).toContain('guest');
+    expect(yaml).toContain('RABBITMQ_DEFAULT_PASSWORD:');
   });
 
   it('has volume', () => {

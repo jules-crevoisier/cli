@@ -97,7 +97,7 @@ export function getDbHost(stack: StackType, db: DatabaseType): string {
     postgresql: 'db-postgres',
     mongodb: 'db-mongo',
     mysql: 'db-mysql',
-    redis: 'db-redis',
+    redis: 'redis',
   };
   return serviceNames[db] || 'localhost';
 }

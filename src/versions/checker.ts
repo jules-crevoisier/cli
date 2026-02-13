@@ -41,42 +41,40 @@ export async function checkVersions(): Promise<void> {
   logger.info('Checking for latest versions...\n');
 
   const npmChecks = [
-    { name: 'Next.js', pkg: 'next' },
-    { name: 'React', pkg: 'react' },
-    { name: 'Vite', pkg: 'vite' },
-    { name: 'Nuxt', pkg: 'nuxt' },
-    { name: 'Express', pkg: 'express' },
-    { name: 'TypeScript', pkg: 'typescript' },
-    { name: 'Tailwind CSS', pkg: 'tailwindcss' },
+    { name: 'Next.js', pkg: 'next', current: defaults.nextjs },
+    { name: 'React', pkg: 'react', current: defaults.react },
+    { name: 'Vite', pkg: 'vite', current: defaults.vite },
+    { name: 'Nuxt', pkg: 'nuxt', current: defaults.nuxt },
+    { name: 'Express', pkg: 'express', current: defaults.express },
+    { name: 'TypeScript', pkg: 'typescript', current: defaults.typescript },
+    { name: 'Tailwind CSS', pkg: 'tailwindcss', current: defaults.tailwind },
   ];
 
-  const defaultsMap: Record<string, string> = {
-    'Next.js': defaults.nextjs,
-    'React': defaults.react,
-    'Vite': defaults.vite,
-    'Nuxt': defaults.nuxt,
-    'Express': defaults.express,
-    'TypeScript': defaults.typescript,
-    'Tailwind CSS': defaults.tailwind,
-  };
+  const dbChecks = [
+    { name: 'PostgreSQL', image: 'postgres', current: defaults.databases.postgresql },
+    { name: 'MongoDB', image: 'mongo', current: defaults.databases.mongodb },
+    { name: 'MySQL', image: 'mysql', current: defaults.databases.mysql },
+    { name: 'Redis', image: 'redis', current: defaults.databases.redis },
+  ];
+
+  // Fetch all versions in parallel instead of sequentially
+  const [npmResults, dbResults] = await Promise.all([
+    Promise.allSettled(npmChecks.map((check) => fetchLatestNpmVersion(check.pkg))),
+    Promise.allSettled(dbChecks.map((check) => fetchLatestDockerTag(check.image))),
+  ]);
 
   console.log('  npm packages:');
-  for (const check of npmChecks) {
-    const latest = await fetchLatestNpmVersion(check.pkg);
-    logger.versionRow(check.name, defaultsMap[check.name], latest);
+  for (let i = 0; i < npmChecks.length; i++) {
+    const result = npmResults[i];
+    const latest = result.status === 'fulfilled' ? result.value : null;
+    logger.versionRow(npmChecks[i].name, npmChecks[i].current, latest);
   }
 
   console.log('\n  Docker images:');
-  const dbChecks = [
-    { name: 'PostgreSQL', image: 'postgres', version: defaults.databases.postgresql },
-    { name: 'MongoDB', image: 'mongo', version: defaults.databases.mongodb },
-    { name: 'MySQL', image: 'mysql', version: defaults.databases.mysql },
-    { name: 'Redis', image: 'redis', version: defaults.databases.redis },
-  ];
-
-  for (const check of dbChecks) {
-    const latest = await fetchLatestDockerTag(check.image);
-    logger.versionRow(check.name, check.version, latest);
+  for (let i = 0; i < dbChecks.length; i++) {
+    const result = dbResults[i];
+    const latest = result.status === 'fulfilled' ? result.value : null;
+    logger.versionRow(dbChecks[i].name, dbChecks[i].current, latest);
   }
 
   console.log('');

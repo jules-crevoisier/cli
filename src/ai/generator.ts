@@ -1,15 +1,6 @@
 import type { GeneratorContext, ProjectOptions } from '../types';
 import { isJsStack, isPhpStack } from '../utils/stacks';
-
-const STACK_LABELS: Record<string, string> = {
-  nextjs: 'Full-stack web application (Next.js + React)',
-  'vite-react': 'Single-page application (Vite + React)',
-  nuxt: 'Full-stack web application (Nuxt + Vue)',
-  'vite-react-express': 'Full-stack web application (Vite + React + Express)',
-  express: 'Backend API (Express.js)',
-  symfony: 'Full-stack PHP application (Symfony)',
-  laravel: 'Full-stack PHP application (Laravel)',
-};
+import { STACK_DESCRIPTIONS } from '../constants';
 
 function generateStructureTree(options: ProjectOptions): string {
   const lines: string[] = [`${options.projectName}/`];
@@ -461,7 +452,7 @@ export function generateAgentMd(ctx: GeneratorContext, port: number): string {
 
   // Project overview
   sections.push('## Project Overview\n');
-  sections.push(`- **Type**: ${STACK_LABELS[options.stack]}`);
+  sections.push(`- **Type**: ${STACK_DESCRIPTIONS[options.stack]}`);
 
   if (jsStack) {
     sections.push(`- **Language**: ${options.typescript ? 'TypeScript' : 'JavaScript'}`);

@@ -4,66 +4,107 @@ import { validateProjectName } from './utils/validation';
 import { isJsStack, hasPrismaCompatibleDb } from './utils/stacks';
 import { getModulesForStack, resolveModuleDependencies, resolveModuleServices } from './modules/registry';
 
+const VALID_STACKS: StackType[] = ['nextjs', 'vite-react', 'nuxt', 'vite-react-express', 'express', 'symfony', 'laravel'];
+const VALID_DATABASES: DatabaseType[] = ['postgresql', 'mongodb', 'mysql', 'redis', 'sqlite'];
+const VALID_ORMS: OrmType[] = ['prisma', 'doctrine', 'eloquent', 'none'];
+const VALID_SERVICES: ServiceType[] = ['mailpit', 'minio', 'rabbitmq', 'adminer'];
+const VALID_MODULES: ModuleType[] = ['auth', 'crud', 'admin', 'file-upload', 'email', 'api-docs', 'i18n', 'dark-mode', 'ci-cd'];
+const VALID_AUTH_STRATEGIES: AuthStrategy[] = ['jwt', 'session'];
+
+function validateCliOption<T extends string>(value: string, validValues: T[], optionName: string): T {
+  if (!validValues.includes(value as T)) {
+    throw new Error(
+      `Invalid value "${value}" for --${optionName}. Valid values: ${validValues.join(', ')}`
+    );
+  }
+  return value as T;
+}
+
+function validateCliList<T extends string>(csv: string, validValues: T[], optionName: string): T[] {
+  const values = csv.split(',').map((s) => s.trim()).filter(Boolean);
+  for (const v of values) {
+    validateCliOption(v, validValues, optionName);
+  }
+  return values as T[];
+}
+
 export async function runInteractivePrompts(
   projectNameArg?: string,
   cliOptions?: Record<string, unknown>
 ): Promise<ProjectOptions> {
   const yes = cliOptions?.yes === true;
 
-  // Project name
-  const projectName = projectNameArg || (yes ? 'my-app' : await input({
-    message: 'What is your project name?',
-    default: 'my-app',
-    validate: validateProjectName,
-  }));
+  // Project name — validate even when passed as CLI argument
+  let projectName: string;
+  if (projectNameArg) {
+    const validation = validateProjectName(projectNameArg);
+    if (validation !== true) {
+      throw new Error(validation);
+    }
+    projectName = projectNameArg;
+  } else if (yes) {
+    projectName = 'my-app';
+  } else {
+    projectName = await input({
+      message: 'What is your project name?',
+      default: 'my-app',
+      validate: validateProjectName,
+    });
+  }
 
-  // Stack
-  const stack: StackType = (cliOptions?.stack as StackType) || (yes ? 'nextjs' : await select({
-    message: 'What type of project do you want to create?',
-    choices: [
-      {
-        name: 'Next.js + React (full-stack with SSR)',
-        value: 'nextjs' as const,
-        description: 'Server-rendered React app with API routes',
-      },
-      {
-        name: 'Vite + React (SPA)',
-        value: 'vite-react' as const,
-        description: 'Fast client-side React application',
-      },
-      {
-        name: 'Nuxt (full-stack Vue)',
-        value: 'nuxt' as const,
-        description: 'Server-rendered Vue with API routes and file-based routing (Nuxt 3)',
-      },
-      {
-        name: 'Vite + React + Express (full-stack)',
-        value: 'vite-react-express' as const,
-        description: 'React SPA frontend + Express API backend (monorepo)',
-      },
-      {
-        name: 'Express.js (backend API)',
-        value: 'express' as const,
-        description: 'RESTful API server with Express',
-      },
-      {
-        name: 'Symfony (PHP full-stack)',
-        value: 'symfony' as const,
-        description: 'PHP framework with Doctrine ORM (Docker)',
-      },
-      {
-        name: 'Laravel (PHP full-stack)',
-        value: 'laravel' as const,
-        description: 'PHP framework with Eloquent ORM (Docker)',
-      },
-    ],
-  }));
+  // Stack — validate CLI value
+  let stack: StackType;
+  if (cliOptions?.stack) {
+    stack = validateCliOption(cliOptions.stack as string, VALID_STACKS, 'stack');
+  } else if (yes) {
+    stack = 'nextjs';
+  } else {
+    stack = await select({
+      message: 'What type of project do you want to create?',
+      choices: [
+        {
+          name: 'Next.js + React (full-stack with SSR)',
+          value: 'nextjs' as const,
+          description: 'Server-rendered React app with API routes',
+        },
+        {
+          name: 'Vite + React (SPA)',
+          value: 'vite-react' as const,
+          description: 'Fast client-side React application',
+        },
+        {
+          name: 'Nuxt (full-stack Vue)',
+          value: 'nuxt' as const,
+          description: 'Server-rendered Vue with API routes and file-based routing (Nuxt 3)',
+        },
+        {
+          name: 'Vite + React + Express (full-stack)',
+          value: 'vite-react-express' as const,
+          description: 'React SPA frontend + Express API backend (monorepo)',
+        },
+        {
+          name: 'Express.js (backend API)',
+          value: 'express' as const,
+          description: 'RESTful API server with Express',
+        },
+        {
+          name: 'Symfony (PHP full-stack)',
+          value: 'symfony' as const,
+          description: 'PHP framework with Doctrine ORM (Docker)',
+        },
+        {
+          name: 'Laravel (PHP full-stack)',
+          value: 'laravel' as const,
+          description: 'PHP framework with Eloquent ORM (Docker)',
+        },
+      ],
+    });
+  }
 
-  // Databases
+  // Databases — validate CLI values
   let databases: DatabaseType[] = [];
   if (cliOptions?.db) {
-    // --db postgresql,redis
-    databases = (cliOptions.db as string).split(',').map((s) => s.trim()) as DatabaseType[];
+    databases = validateCliList(cliOptions.db as string, VALID_DATABASES, 'db');
   } else if (!yes) {
     const needsDatabase = await confirm({
       message: 'Do you need a database?',
@@ -90,7 +131,7 @@ export async function runInteractivePrompts(
   let orm: OrmType = 'none';
 
   if (cliOptions?.orm) {
-    orm = cliOptions.orm as OrmType;
+    orm = validateCliOption(cliOptions.orm as string, VALID_ORMS, 'orm');
   } else if (stack === 'symfony') {
     orm = 'doctrine';
   } else if (stack === 'laravel') {
@@ -109,8 +150,7 @@ export async function runInteractivePrompts(
   // Additional services
   let services: ServiceType[] = [];
   if (cliOptions?.services) {
-    // --services mailpit,minio
-    services = (cliOptions.services as string).split(',').map((s) => s.trim()) as ServiceType[];
+    services = validateCliList(cliOptions.services as string, VALID_SERVICES, 'services');
   } else if (!yes) {
     const needsServices = await confirm({
       message: 'Do you want additional services? (mailer, S3 storage, queues...)',
@@ -167,8 +207,7 @@ export async function runInteractivePrompts(
   let authStrategy: AuthStrategy | undefined;
 
   if (cliOptions?.modules) {
-    // --modules auth,crud,admin
-    modules = (cliOptions.modules as string).split(',').map((s) => s.trim()) as ModuleType[];
+    modules = validateCliList(cliOptions.modules as string, VALID_MODULES, 'modules');
   } else if (!yes) {
     const needsModules = await confirm({
       message: 'Do you want to add application modules? (auth, admin, API docs...)',
@@ -210,7 +249,7 @@ export async function runInteractivePrompts(
   // Auth strategy prompt (if auth module selected)
   if (modules.includes('auth')) {
     if (cliOptions?.authStrategy) {
-      authStrategy = cliOptions.authStrategy as AuthStrategy;
+      authStrategy = validateCliOption(cliOptions.authStrategy as string, VALID_AUTH_STRATEGIES, 'auth-strategy');
     } else if (yes) {
       authStrategy = 'jwt';
     } else {
@@ -233,7 +272,7 @@ export async function runInteractivePrompts(
   }
 
   return {
-    projectName: projectName as string,
+    projectName,
     stack,
     typescript,
     databases,
