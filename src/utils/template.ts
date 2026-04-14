@@ -4,15 +4,41 @@ import fs from 'fs-extra';
 
 let cachedTemplatesDir: string | null = null;
 
+function getTemplateCandidates(): string[] {
+  const candidates: string[] = [];
+
+  const envTemplatesDir = process.env.LETSCRAFT_TEMPLATES_DIR;
+  if (envTemplatesDir) {
+    candidates.push(path.resolve(envTemplatesDir));
+  }
+
+  // Development from TypeScript source (src/utils/template.ts -> src/templates)
+  candidates.push(path.resolve(__dirname, '..', 'templates'));
+  // Execution from compiled dist (dist/utils/template.js -> src/templates)
+  candidates.push(path.resolve(__dirname, '..', 'src', 'templates'));
+
+  // Packaged executable support: look next to the executable.
+  // This avoids hard failures when bundled snapshot paths are unavailable.
+  if (process.execPath) {
+    const execDir = path.dirname(process.execPath);
+    candidates.push(path.join(execDir, 'src', 'templates'));
+    candidates.push(path.join(execDir, 'templates'));
+  }
+
+  return candidates;
+}
+
 function getTemplatesDir(): string {
   if (cachedTemplatesDir) return cachedTemplatesDir;
 
-  // When running from dist/index.js (__dirname = dist/), templates are at ../src/templates
-  const fromDist = path.resolve(__dirname, '..', 'src', 'templates');
-  // When running from src/utils/template.ts (__dirname = src/utils/), templates are at ../templates
-  const fromSrc = path.resolve(__dirname, '..', 'templates');
+  const existingDir = getTemplateCandidates().find((candidate) => fs.existsSync(candidate));
+  if (!existingDir) {
+    throw new Error(
+      `Templates directory not found. Checked: ${getTemplateCandidates().join(', ')}`
+    );
+  }
 
-  cachedTemplatesDir = fs.existsSync(fromDist) ? fromDist : fromSrc;
+  cachedTemplatesDir = existingDir;
   return cachedTemplatesDir;
 }
 
